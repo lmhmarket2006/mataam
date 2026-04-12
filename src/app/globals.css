@@ -134,21 +134,15 @@ body {
   -webkit-touch-callout: none;
 }
 
-/* Prevent horizontal overflow */
+/* Smooth scroll */
 html {
+  scroll-behavior: smooth;
   overflow-x: clip;
 }
 
-/* Mobile touch improvements */
-@media (max-width: 767px) {
-  button, a, [role="button"] {
-    min-height: 44px;
-    min-width: 44px;
-  }
-  
-  input, textarea, select {
-    min-height: 44px;
-    font-size: 16px; /* Prevent iOS zoom on focus */
+@supports not (overflow-x: clip) {
+  html {
+    overflow-x: hidden;
   }
 }
 
