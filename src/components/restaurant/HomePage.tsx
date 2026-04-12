@@ -101,7 +101,7 @@ function HeroSection() {
   const { navigate } = useNavigation();
 
   return (
-    <section className="relative min-h-[70vh] sm:min-h-[80vh] flex items-center overflow-hidden">
+    <section className="relative min-h-[70vh] sm:min-h-[80vh] flex items-center overflow-hidden -mt-16 sm:-mt-[72px] pt-16 sm:pt-[72px]">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <img
@@ -110,12 +110,12 @@ function HeroSection() {
           className="w-full h-full object-cover"
         />
         {/* Dark gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/70" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-black/10" />
       </div>
 
       {/* Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-20 sm:py-24">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-16 sm:py-20">
         <div className="max-w-2xl">
           {/* Badge */}
           <motion.div

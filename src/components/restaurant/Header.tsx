@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { motion, AnimatePresence, useMotionValueEvent, useScroll } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShoppingBag,
   Languages,
@@ -34,11 +34,24 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const itemCount = getItemCount();
 
-  const { scrollY } = useScroll();
+  const isHomePage = currentPage === 'home';
+  // On non-home pages, always show solid background
+  const shouldShowGlass = scrolled || !isHomePage;
 
-  useMotionValueEvent(scrollY, 'change', (latest) => {
-    setScrolled(latest > 20);
-  });
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Check initial scroll position
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Scroll to top on page change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+  }, [currentPage]);
 
   return (
     <>
@@ -49,14 +62,14 @@ export default function Header() {
         className={`
           fixed top-0 left-0 right-0 z-50 transition-all duration-300
           ${
-            scrolled
-              ? 'glass border-b border-border/60 shadow-sm shadow-primary/5'
+            shouldShowGlass
+              ? 'bg-background/90 backdrop-blur-xl border-b border-border/60 shadow-sm shadow-primary/5'
               : 'bg-transparent'
           }
         `}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-18">
+          <div className="flex items-center justify-between h-16 sm:h-[72px]">
             {/* Mobile hamburger */}
             <div className="flex items-center lg:hidden order-first">
               <Button
@@ -97,41 +110,39 @@ export default function Header() {
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-1">
-              <AnimatePresence mode="wait">
-                {navItems.map((item) => {
-                  const isActive = currentPage === item.page;
-                  return (
-                    <motion.button
-                      key={item.page}
-                      onClick={() => navigate(item.page)}
-                      className={`
-                        relative px-3.5 py-2 rounded-lg text-sm font-medium
-                        transition-colors duration-200
-                        ${
-                          isActive
-                            ? 'text-primary'
-                            : 'text-foreground/70 hover:text-primary hover:bg-primary/8'
-                        }
-                      `}
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.97 }}
-                    >
-                      {t(locale, item.labelKey)}
-                      {isActive && (
-                        <motion.div
-                          layoutId="desktop-active-nav"
-                          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-5 h-0.5 bg-primary rounded-full"
-                          transition={{
-                            type: 'spring',
-                            stiffness: 500,
-                            damping: 35,
-                          }}
-                        />
-                      )}
-                    </motion.button>
-                  );
-                })}
-              </AnimatePresence>
+              {navItems.map((item) => {
+                const isActive = currentPage === item.page;
+                return (
+                  <motion.button
+                    key={item.page}
+                    onClick={() => navigate(item.page)}
+                    className={`
+                      relative px-3.5 py-2 rounded-lg text-sm font-medium
+                      transition-colors duration-200
+                      ${
+                        isActive
+                          ? 'text-primary'
+                          : 'text-foreground/70 hover:text-primary hover:bg-primary/8'
+                      }
+                    `}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    {t(locale, item.labelKey)}
+                    {isActive && (
+                      <motion.div
+                        layoutId="desktop-active-nav"
+                        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-5 h-0.5 bg-primary rounded-full"
+                        transition={{
+                          type: 'spring',
+                          stiffness: 500,
+                          damping: 35,
+                        }}
+                      />
+                    )}
+                  </motion.button>
+                );
+              })}
             </nav>
 
             {/* Actions */}
@@ -198,7 +209,7 @@ export default function Header() {
       </motion.header>
 
       {/* Spacer for fixed header */}
-      <div className="h-16 sm:h-18" />
+      <div className="h-16 sm:h-[72px]" />
 
       {/* Mobile Navigation Drawer */}
       <MobileNav open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
