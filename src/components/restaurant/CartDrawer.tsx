@@ -23,7 +23,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCart, useDelivery, useLanguage, useNavigation, type CartItem } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import DeliveryInfo from './DeliveryInfo';
@@ -51,7 +50,6 @@ export default function CartDrawer() {
   const itemCount = getItemCount();
   const isEmpty = items.length === 0;
 
-  // Validate delivery form
   const isDeliveryValid = (() => {
     if (isEmpty) return false;
     if (orderType === 'delivery') {
@@ -60,17 +58,12 @@ export default function CartDrawer() {
     return true;
   })();
 
-  // Format WhatsApp message
   const formatWhatsAppMessage = useCallback(() => {
     const lines: string[] = [];
     lines.push('🍽️ طلب جديد من مطعم الواحة');
     lines.push('');
-
-    // Order type
     lines.push(`📦 نوع الطلب: ${orderType === 'delivery' ? '🚗 توصيل' : '🏪 استلام'}`);
     lines.push('');
-
-    // Delivery details
     if (orderType === 'delivery') {
       lines.push('📍 تفاصيل التوصيل:');
       lines.push(`   العنوان: ${address}`);
@@ -80,35 +73,24 @@ export default function CartDrawer() {
       lines.push(`   الجوال: ${customerPhone}`);
       if (deliveryNotes) lines.push(`   ملاحظات: ${deliveryNotes}`);
     }
-
     lines.push(`💳 طريقة الدفع: ${paymentMethod === 'cash' ? 'الدفع عند الاستلام' : 'الدفع الإلكتروني'}`);
     lines.push('');
     lines.push('📋 الأصناف:');
-
     items.forEach((item, index) => {
-      // Find selected variant label from options
       const variantOption = item.options.find(
         (o) => o.type === 'riceType' || o.type === 'quantity'
       );
       const variantLabel = variantOption ? ` - ${variantOption.value}` : '';
-
-      lines.push(
-        `${index + 1}. ${item.name}${variantLabel} × ${item.quantity} = ${item.totalPrice} ر.س`
-      );
-
-      // Show extras
+      lines.push(`${index + 1}. ${item.name}${variantLabel} × ${item.quantity} = ${item.totalPrice} ر.س`);
       const extrasOptions = item.options.filter((o) => o.type === 'extras');
       if (extrasOptions.length > 0) {
         const extrasNames = extrasOptions.map((o) => o.value).join('، ');
         lines.push(`   الإضافات: ${extrasNames}`);
       }
-
-      // Show notes
       if (item.notes) {
         lines.push(`   ملاحظات: ${item.notes}`);
       }
     });
-
     lines.push('');
     lines.push(`💰 المجموع: ${subtotal} ر.س`);
     if (deliveryFee > 0) {
@@ -117,11 +99,9 @@ export default function CartDrawer() {
       lines.push('🚗 التوصيل: مجاناً ✅');
     }
     lines.push(`💵 الإجمالي: ${total} ر.س`);
-
     return lines.join('\n');
   }, [items, total, subtotal, deliveryFee, orderType, address, buildingNo, floorNo, apartmentNo, customerPhone, deliveryNotes, paymentMethod]);
 
-  // Handle WhatsApp checkout
   const handleWhatsAppCheckout = useCallback(() => {
     const message = formatWhatsAppMessage();
     const encodedMessage = encodeURIComponent(message);
@@ -129,7 +109,6 @@ export default function CartDrawer() {
     window.open(url, '_blank');
   }, [formatWhatsAppMessage]);
 
-  // Handle clear cart with confirmation
   const handleClearCart = useCallback(() => {
     if (showClearConfirm) {
       clearCart();
@@ -140,7 +119,6 @@ export default function CartDrawer() {
     }
   }, [showClearConfirm, clearCart]);
 
-  // Get display label for a cart item's selected variant
   const getItemVariantLabel = useCallback((item: CartItem) => {
     const variantOption = item.options.find(
       (o) => o.type === 'riceType' || o.type === 'quantity'
@@ -148,12 +126,55 @@ export default function CartDrawer() {
     return variantOption?.value ?? '';
   }, []);
 
-  // Get extras text for a cart item
   const getItemExtrasText = useCallback((item: CartItem) => {
     const extrasOptions = item.options.filter((o) => o.type === 'extras');
     if (extrasOptions.length === 0) return '';
     return extrasOptions.map((o) => o.value).join('، ');
   }, []);
+
+  // Render cart footer (price + checkout button) — always sticky
+  const renderFooter = () => (
+    <SheetFooter className="border-t border-border bg-background/95 backdrop-blur-sm px-4 sm:px-6 py-4 gap-3 shrink-0">
+      {orderType === 'delivery' && !isDeliveryValid && showDelivery && (
+        <motion.p
+          initial={{ opacity: 0, y: -5 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-xs text-destructive flex items-center gap-1.5 px-1"
+        >
+          <AlertCircle className="size-3" />
+          {locale === 'ar' ? 'يرجى إدخال العنوان ورقم الجوال' : 'Please enter address and phone number'}
+        </motion.p>
+      )}
+      <div className="space-y-1.5 w-full">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">{t(locale, 'subtotal')}</span>
+          <span className="text-sm font-medium text-foreground tabular-nums">{subtotal} {t(locale, 'sar')}</span>
+        </div>
+        {orderType === 'delivery' && (
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">{t(locale, 'deliveryFee')}</span>
+            <span className={`text-sm font-medium tabular-nums ${deliveryFee === 0 ? 'text-green-600' : 'text-foreground'}`}>
+              {deliveryFee === 0 ? t(locale, 'freeDelivery') : `${deliveryFee} ${t(locale, 'sar')}`}
+            </span>
+          </div>
+        )}
+        <Separator className="!mt-2" />
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-bold text-foreground">{t(locale, 'totalWithDelivery')}</span>
+          <span className="text-xl font-bold text-primary tabular-nums">{total} {t(locale, 'sar')}</span>
+        </div>
+      </div>
+      <Button
+        onClick={handleWhatsAppCheckout}
+        disabled={!isDeliveryValid}
+        className="w-full h-12 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] disabled:bg-muted disabled:text-muted-foreground text-white text-sm font-bold shadow-lg shadow-[#25D366]/20 transition-all"
+        size="lg"
+      >
+        <MessageCircle className="w-5 h-5" />
+        {t(locale, 'checkoutWhatsApp')}
+      </Button>
+    </SheetFooter>
+  );
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => { if (!open) closeCart(); }}>
@@ -161,17 +182,14 @@ export default function CartDrawer() {
         side={isRTL ? 'left' : 'right'}
         className="w-full sm:max-w-md p-0 flex flex-col"
       >
-        {/* ============ HEADER ============ */}
-        <SheetHeader className="px-4 sm:px-6 pt-5 pb-3">
+        <SheetHeader className="px-4 sm:px-6 pt-5 pb-3 shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
                 <ShoppingBag className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <SheetTitle className="text-lg font-bold text-foreground">
-                  {t(locale, 'cartTitle')}
-                </SheetTitle>
+                <SheetTitle className="text-lg font-bold text-foreground">{t(locale, 'cartTitle')}</SheetTitle>
                 {!isEmpty && (
                   <SheetDescription className="text-xs text-muted-foreground mt-0.5">
                     {itemCount} {t(locale, 'items')}
@@ -189,12 +207,11 @@ export default function CartDrawer() {
           </div>
         </SheetHeader>
 
-        <Separator />
+        <Separator className="shrink-0" />
 
-        {/* ============ CART CONTENT ============ */}
-        <div className="flex-1 overflow-hidden flex flex-col">
+        {/* Body area — always present, scrollable */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
           {isEmpty ? (
-            /* ====== EMPTY STATE ====== */
             <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 text-center">
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
@@ -204,30 +221,13 @@ export default function CartDrawer() {
               >
                 <ShoppingBag className="w-9 h-9 text-muted-foreground" />
               </motion.div>
-              <motion.div
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.1 }}
-                className="space-y-2"
-              >
-                <h3 className="text-base font-semibold text-foreground">
-                  {t(locale, 'cartEmpty')}
-                </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed max-w-[240px]">
-                  {t(locale, 'cartEmptyDesc')}
-                </p>
+              <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="space-y-2">
+                <h3 className="text-base font-semibold text-foreground">{t(locale, 'cartEmpty')}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed max-w-[240px]">{t(locale, 'cartEmptyDesc')}</p>
               </motion.div>
-              <motion.div
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="mt-6"
-              >
+              <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="mt-6">
                 <Button
-                  onClick={() => {
-                    closeCart();
-                    navigate('menu');
-                  }}
+                  onClick={() => { closeCart(); navigate('menu'); }}
                   variant="outline"
                   className="rounded-xl border-2 border-primary/30 text-primary hover:bg-primary/5 hover:border-primary/50 font-medium"
                 >
@@ -237,8 +237,8 @@ export default function CartDrawer() {
               </motion.div>
             </div>
           ) : (
-            /* ====== CART ITEMS LIST ====== */
-            <ScrollArea className="flex-1">
+            <>
+              {/* Cart Items */}
               <div className="px-4 sm:px-6 py-3 space-y-3">
                 <AnimatePresence mode="popLayout">
                   {items.map((item) => (
@@ -255,137 +255,83 @@ export default function CartDrawer() {
                   ))}
                 </AnimatePresence>
               </div>
-            </ScrollArea>
+
+              {/* Delivery Toggle */}
+              <div className="px-4 sm:px-6 pt-2">
+                <Button
+                  onClick={() => setShowDelivery(!showDelivery)}
+                  variant={showDelivery ? 'default' : 'outline'}
+                  className={`w-full rounded-xl text-sm font-medium h-10 transition-all ${
+                    showDelivery
+                      ? 'bg-primary/10 text-primary border-primary/20 hover:bg-primary/15'
+                      : 'border-2 border-dashed border-border hover:border-primary/30'
+                  }`}
+                >
+                  <Truck className="w-4 h-4" />
+                  {t(locale, 'deliveryTitle')}
+                  {!showDelivery && !isDeliveryValid && orderType === 'delivery' && (
+                    <AlertCircle className="w-4 h-4 text-destructive ms-auto" />
+                  )}
+                </Button>
+              </div>
+
+              {/* Delivery Info Panel */}
+              <AnimatePresence>
+                {showDelivery && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-4 sm:px-6 pt-1">
+                      <DeliveryInfo subtotal={subtotal} />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Clear Cart */}
+              <div className="px-4 sm:px-6 pt-2 pb-4">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={showClearConfirm ? 'confirm' : 'clear'}
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="w-full overflow-hidden"
+                  >
+                    <Button
+                      onClick={handleClearCart}
+                      variant={showClearConfirm ? 'destructive' : 'ghost'}
+                      className={`w-full rounded-xl text-sm font-medium ${
+                        showClearConfirm
+                          ? ''
+                          : 'text-muted-foreground hover:text-destructive hover:bg-destructive/5'
+                      }`}
+                      size="sm"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      {showClearConfirm ? t(locale, 'clearCart') + ' ✓' : t(locale, 'clearCart')}
+                    </Button>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </>
           )}
         </div>
 
-        {/* ============ FOOTER ============ */}
-        {!isEmpty && (
-          <SheetFooter className="border-t border-border bg-background/95 backdrop-blur-sm px-4 sm:px-6 py-4 gap-3">
-            {/* Delivery Toggle Button */}
-            <Button
-              onClick={() => setShowDelivery(!showDelivery)}
-              variant={showDelivery ? 'default' : 'outline'}
-              className={`w-full rounded-xl text-sm font-medium h-10 transition-all ${
-                showDelivery
-                  ? 'bg-primary/10 text-primary border-primary/20 hover:bg-primary/15'
-                  : 'border-2 border-dashed border-border hover:border-primary/30'
-              }`}
-            >
-              <Truck className="w-4 h-4" />
-              {t(locale, 'deliveryTitle')}
-              {!showDelivery && !isDeliveryValid && orderType === 'delivery' && (
-                <AlertCircle className="w-4 h-4 text-destructive ms-auto" />
-              )}
-            </Button>
-
-            {/* Delivery Info Panel */}
-            <AnimatePresence>
-              {showDelivery && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.25 }}
-                  className="overflow-hidden"
-                >
-                  <DeliveryInfo subtotal={subtotal} />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Price Summary */}
-            <div className="space-y-1.5 w-full">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">
-                  {t(locale, 'subtotal')}
-                </span>
-                <span className="text-sm font-medium text-foreground tabular-nums">
-                  {subtotal} {t(locale, 'sar')}
-                </span>
-              </div>
-              {orderType === 'delivery' && (
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">
-                    {t(locale, 'deliveryFee')}
-                  </span>
-                  <span className={`text-sm font-medium tabular-nums ${deliveryFee === 0 ? 'text-green-600' : 'text-foreground'}`}>
-                    {deliveryFee === 0 ? t(locale, 'freeDelivery') : `${deliveryFee} ${t(locale, 'sar')}`}
-                  </span>
-                </div>
-              )}
-              <Separator className="!mt-2" />
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-foreground">
-                  {t(locale, 'totalWithDelivery')}
-                </span>
-                <span className="text-xl font-bold text-primary tabular-nums">
-                  {total} {t(locale, 'sar')}
-                </span>
-              </div>
-            </div>
-
-            {/* Validation Warning */}
-            {orderType === 'delivery' && !isDeliveryValid && showDelivery && (
-              <motion.p
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-xs text-destructive flex items-center gap-1.5 px-1"
-              >
-                <AlertCircle className="size-3" />
-                {locale === 'ar'
-                  ? 'يرجى إدخال العنوان ورقم الجوال'
-                  : 'Please enter address and phone number'}
-              </motion.p>
-            )}
-
-            {/* WhatsApp Checkout */}
-            <Button
-              onClick={handleWhatsAppCheckout}
-              disabled={!isDeliveryValid}
-              className="w-full h-12 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] disabled:bg-muted disabled:text-muted-foreground text-white text-sm font-bold shadow-lg shadow-[#25D366]/20 transition-all"
-              size="lg"
-            >
-              <MessageCircle className="w-5 h-5" />
-              {t(locale, 'checkoutWhatsApp')}
-            </Button>
-
-            {/* Clear Cart */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={showClearConfirm ? 'confirm' : 'clear'}
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.15 }}
-                className="w-full overflow-hidden"
-              >
-                <Button
-                  onClick={handleClearCart}
-                  variant={showClearConfirm ? 'destructive' : 'ghost'}
-                  className={`w-full rounded-xl text-sm font-medium ${
-                    showClearConfirm
-                      ? ''
-                      : 'text-muted-foreground hover:text-destructive hover:bg-destructive/5'
-                  }`}
-                  size="sm"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  {showClearConfirm
-                    ? t(locale, 'clearCart') + ' ✓'
-                    : t(locale, 'clearCart')}
-                </Button>
-              </motion.div>
-            </AnimatePresence>
-          </SheetFooter>
-        )}
+        {/* Sticky Footer */}
+        {!isEmpty && renderFooter()}
       </SheetContent>
     </Sheet>
   );
 }
 
 /* ============================================================
-   CartItemCard - Individual cart item component
+   CartItemCard
    ============================================================ */
 interface CartItemCardProps {
   item: CartItem;
@@ -397,15 +343,7 @@ interface CartItemCardProps {
   onRemove: (cartItemId: string) => void;
 }
 
-function CartItemCard({
-  item,
-  locale,
-  isRTL,
-  variantLabel,
-  extrasText,
-  onQuantityChange,
-  onRemove,
-}: CartItemCardProps) {
+function CartItemCard({ item, locale, isRTL, variantLabel, extrasText, onQuantityChange, onRemove }: CartItemCardProps) {
   return (
     <motion.div
       layout
@@ -415,7 +353,6 @@ function CartItemCard({
       transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
       className="relative flex gap-3 p-3 rounded-2xl border border-border bg-card hover:shadow-sm transition-shadow"
     >
-      {/* Item Image */}
       <div
         className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden shrink-0 bg-muted"
         style={{
@@ -424,14 +361,10 @@ function CartItemCard({
           backgroundPosition: 'center',
         }}
       />
-
-      {/* Item Details */}
       <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
         <div className="space-y-0.5">
           <div className="flex items-start justify-between gap-2">
-            <h4 className="text-sm font-semibold text-foreground leading-tight truncate">
-              {item.name}
-            </h4>
+            <h4 className="text-sm font-semibold text-foreground leading-tight truncate">{item.name}</h4>
             <button
               onClick={() => onRemove(item.cartItemId)}
               className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/8 transition-colors -mt-0.5"
@@ -440,32 +373,17 @@ function CartItemCard({
               <Trash2 className="w-3.5 h-3.5" />
             </button>
           </div>
-
-          {/* Variant label */}
           {variantLabel && (
-            <p className="text-xs text-primary font-medium leading-tight truncate">
-              {variantLabel}
-            </p>
+            <p className="text-xs text-primary font-medium leading-tight truncate">{variantLabel}</p>
           )}
-
-          {/* Extras */}
           {extrasText && (
-            <p className="text-xs text-muted-foreground leading-tight truncate">
-              {extrasText}
-            </p>
+            <p className="text-xs text-muted-foreground leading-tight truncate">{extrasText}</p>
           )}
-
-          {/* Notes */}
           {item.notes && (
-            <p className="text-xs text-gold/80 italic leading-tight truncate">
-              {item.notes}
-            </p>
+            <p className="text-xs text-gold/80 italic leading-tight truncate">{item.notes}</p>
           )}
         </div>
-
-        {/* Quantity & Price */}
         <div className="flex items-center justify-between mt-1.5">
-          {/* Quantity Controls */}
           <div className="flex items-center gap-1.5">
             <motion.button
               whileHover={{ scale: 1.1 }}
@@ -476,9 +394,7 @@ function CartItemCard({
             >
               <Minus className="w-3 h-3" />
             </motion.button>
-            <span className="text-sm font-bold text-foreground min-w-[1.5rem] text-center tabular-nums">
-              {item.quantity}
-            </span>
+            <span className="text-sm font-bold text-foreground min-w-[1.5rem] text-center tabular-nums">{item.quantity}</span>
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
@@ -489,11 +405,7 @@ function CartItemCard({
               <Plus className="w-3 h-3" />
             </motion.button>
           </div>
-
-          {/* Item Total */}
-          <span className="text-sm font-bold text-primary tabular-nums">
-            {item.totalPrice} {t(locale, 'sar')}
-          </span>
+          <span className="text-sm font-bold text-primary tabular-nums">{item.totalPrice} {t(locale, 'sar')}</span>
         </div>
       </div>
     </motion.div>
