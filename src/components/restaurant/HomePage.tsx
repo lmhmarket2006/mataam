@@ -207,70 +207,40 @@ function PopularDishesSection() {
   const { locale } = useLanguage();
   const { openCustomizer } = useCart();
   const { navigate } = useNavigation();
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  const scroll = (dir: 'left' | 'right') => {
-    if (!scrollRef.current) return;
-    const amount = dir === 'left' ? -320 : 320;
-    scrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
-  };
 
   return (
-    <section className="py-16 sm:py-20 lg:py-24">
+    <section className="py-12 sm:py-16 lg:py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeading
           title={t(locale, 'popularDishes')}
           subtitle={t(locale, 'popularDishesSubtitle')}
         />
 
-        {/* Scroll controls */}
-        <div className="relative">
-          {/* Desktop: hide scroll buttons, show grid */}
-          <div className="hidden md:block" />
-
-          {/* Mobile: horizontal scroll */}
-          <div className="md:hidden relative">
-            <div
-              ref={scrollRef}
-              className="flex gap-4 overflow-x-auto no-scrollbar pb-4 -mx-4 px-4"
-            >
-              {popularItems.map((item, i) => (
-                <PopularItemCard
-                  key={item.id}
-                  item={item}
-                  index={i}
-                  onAdd={openCustomizer}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Desktop: grid */}
-          <motion.div
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-50px' }}
-            className="hidden md:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
-          >
-            {popularItems.map((item, i) => (
-              <PopularItemCard
-                key={item.id}
-                item={item}
-                index={i}
-                onAdd={openCustomizer}
-              />
-            ))}
-          </motion.div>
-        </div>
+        {/* Responsive grid: 2 cols on mobile, 3 on tablet, 4 on desktop */}
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-50px' }}
+          className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-5"
+        >
+          {popularItems.map((item, i) => (
+            <PopularItemCard
+              key={item.id}
+              item={item}
+              index={i}
+              onAdd={openCustomizer}
+            />
+          ))}
+        </motion.div>
 
         {/* View All button */}
-        <div className="mt-10 text-center">
+        <div className="mt-8 sm:mt-10 text-center">
           <Button
             variant="outline"
             size="lg"
             onClick={() => navigate('menu')}
-            className="rounded-xl px-8"
+            className="rounded-xl px-6 sm:px-8"
           >
             {t(locale, 'viewAll')}
           </Button>
@@ -298,10 +268,10 @@ function PopularItemCard({
     <motion.div
       variants={scaleIn}
       custom={index}
-      className="card-hover min-w-[260px] md:min-w-0 bg-card rounded-2xl border overflow-hidden shadow-sm"
+      className="card-hover bg-card rounded-xl sm:rounded-2xl border overflow-hidden shadow-sm"
     >
       {/* Image */}
-      <div className="relative aspect-[4/3] overflow-hidden">
+      <div className="relative aspect-[4/3] sm:aspect-[4/3] overflow-hidden">
         <img
           src={item.image}
           alt={name}
@@ -311,42 +281,42 @@ function PopularItemCard({
         {/* Badges */}
         <div className="absolute top-3 start-3 flex flex-col gap-1.5">
           {item.isBestSeller && (
-            <Badge className="bg-gold text-gold-foreground text-[10px] px-2 py-0.5 shadow-md">
+            <Badge className="bg-gold text-gold-foreground text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 shadow-md">
               {t(locale, 'bestSeller')}
             </Badge>
           )}
           {item.isNew && (
-            <Badge className="bg-green-600 text-white text-[10px] px-2 py-0.5 shadow-md">
+            <Badge className="bg-green-600 text-white text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 shadow-md">
               {t(locale, 'newItem')}
             </Badge>
           )}
           {item.isSpicy && (
-            <Badge className="bg-red-500 text-white text-[10px] px-2 py-0.5 shadow-md">
+            <Badge className="bg-red-500 text-white text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 shadow-md">
               {t(locale, 'spicy')}
             </Badge>
           )}
         </div>
         {/* Price overlay */}
-        <div className="absolute bottom-3 end-3">
-          <Badge className="bg-black/70 text-white backdrop-blur-sm text-sm px-2.5 py-1 font-bold">
+        <div className="absolute bottom-2 sm:bottom-3 end-2 sm:end-3">
+          <Badge className="bg-black/70 text-white backdrop-blur-sm text-[11px] sm:text-sm px-2 sm:px-2.5 py-0.5 sm:py-1 font-bold">
             {item.price} {t(locale, 'sar')}
           </Badge>
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-4">
-        <h3 className="font-bold text-foreground text-base leading-snug">{name}</h3>
-        <p className="mt-1.5 text-muted-foreground text-xs leading-relaxed line-clamp-2">
+      <div className="p-2.5 sm:p-4">
+        <h3 className="font-bold text-foreground text-xs sm:text-base leading-snug line-clamp-1 sm:line-clamp-2">{name}</h3>
+        <p className="mt-1 text-muted-foreground text-[10px] sm:text-xs leading-relaxed line-clamp-1 sm:line-clamp-2">
           {desc}
         </p>
         <Button
           size="sm"
           onClick={() => onAdd(item.id)}
-          className="mt-3 w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-xs"
+          className="mt-2 sm:mt-3 w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-[10px] sm:text-xs h-8 sm:h-9"
         >
-          <Plus className="size-3.5" />
-          {t(locale, 'addToCart')}
+          <Plus className="size-3 sm:size-3.5" />
+          <span className="hidden sm:inline">{t(locale, 'addToCart')}</span>
         </Button>
       </div>
     </motion.div>
