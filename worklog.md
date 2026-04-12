@@ -29,3 +29,22 @@ Stage Summary:
 - Arabic/English bilingual support with RTL
 - 35 generated food images
 - Zero lint errors, clean compilation
+
+---
+Task ID: 2
+Agent: Main Agent
+Task: Fix navbar visibility and hero image issues
+
+Work Log:
+- Fixed Header.tsx: Added `useWhiteText` state that activates when on home page and not scrolled
+- All navbar elements (logo, nav links, hamburger menu, language toggle, cart button) now render in white when over the dark hero section
+- Elements transition back to dark colors when user scrolls down (glass background appears) or navigates to other pages
+- Active nav indicator dot changes from gold (on hero) to primary color (on glass)
+- Generated new hero background image using AI: professional Saudi/Yemeni Mandi food spread photography (1344x768)
+- Ran lint check - zero errors
+
+Stage Summary:
+- Navbar text is now white and visible on the dark hero section
+- Navbar properly transitions to dark text with glass background on scroll
+- Hero image replaced with authentic restaurant food photography
+- Zero lint errors, clean compilation
