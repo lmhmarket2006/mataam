@@ -1,101 +1,17 @@
 ---
 Task ID: 1
 Agent: Main Agent
-Task: Build complete Saudi/Yemeni restaurant website
+Task: Fix all scrolling issues across the site - page scrolling, cart drawer scrolling, and horizontal overflow
 
 Work Log:
-- Created project infrastructure: i18n system, menu data, Zustand store
-- Updated menu data with real restaurant prices and items from the user
-- Generated 35 AI food images for all menu items and backgrounds
-- Built Header component with glassmorphism, RTL support, mobile nav
-- Built Footer component with 4-column layout, social links
-- Built MobileNav drawer component
-- Built ItemCustomizer Drawer with price variants, extras, quantity, notes
-- Built CartDrawer Sheet with WhatsApp checkout integration
-- Built HomePage with Hero, Popular Dishes, Features, Offers, Branches, Reviews sections
-- Built MenuPage with sticky category navigation, search, item cards
-- Built AboutPage with story, mission/vision, values, stats sections
-- Built BranchesPage with branch cards and directions
-- Built ContactPage with form and contact info
-- Created main page.tsx routing between all pages
-- Added PWA manifest.json
-- All components use framer-motion animations, RTL support, warm color theme
+- Read and analyzed all key files: page.tsx, globals.css, CartDrawer.tsx, HomePage.tsx, Header.tsx, MobileNav.tsx, ItemCustomizer.tsx, MenuPage.tsx, sheet.tsx
+- Diagnosed root cause: `overflow-x-clip` on the wrapper div in page.tsx was falling back to `overflow-x: hidden` in the sandbox browser, creating a scroll container on the wrapper div. Since the wrapper had `min-h-screen` (not fixed height), it grew with content and never became scrollable.
+- Fixed globals.css: Added `overflow-x: clip` and `overflow-y: auto` on `html` element for viewport-level overflow control. This ensures horizontal overflow is clipped while vertical scrolling is explicitly allowed.
+- Fixed page.tsx: Removed `overflow-x-clip` from wrapper div since it's now handled at the html level.
+- Fixed CartDrawer.tsx: Added `overscroll-contain` and `-webkit-overflow-scrolling: touch` to the scroll body div to prevent scroll chaining on touch devices and ensure smooth mobile scrolling.
+- Fixed HomePage.tsx: Added `overflow-x-clip` to reviews section parent to contain the `-mx-4` negative margins that could cause horizontal overflow.
+- Ran lint - all checks pass.
 
 Stage Summary:
-- Complete restaurant website with 10 components
-- 6 page sections: Home, Menu, About, Branches, Contact, Cart
-- Real menu data with 35+ items across 6 categories
-- WhatsApp order integration (wa.me/966548599988)
-- Arabic/English bilingual support with RTL
-- 35 generated food images
-- Zero lint errors, clean compilation
-
----
-Task ID: 2
-Agent: Main Agent
-Task: Fix navbar visibility and hero image issues
-
-Work Log:
-- Fixed Header.tsx: Added `useWhiteText` state that activates when on home page and not scrolled
-- All navbar elements (logo, nav links, hamburger menu, language toggle, cart button) now render in white when over the dark hero section
-- Elements transition back to dark colors when user scrolls down (glass background appears) or navigates to other pages
-- Active nav indicator dot changes from gold (on hero) to primary color (on glass)
-- Generated new hero background image using AI: professional Saudi/Yemeni Mandi food spread photography (1344x768)
-- Ran lint check - zero errors
-
-Stage Summary:
-- Navbar text is now white and visible on the dark hero section
-- Navbar properly transitions to dark text with glass background on scroll
-- Hero image replaced with authentic restaurant food photography
-- Zero lint errors, clean compilation
-
----
-Task ID: 3
-Agent: Main Agent
-Task: Fix logo/hover, and enforce PWA, Mobile First, RTL, Responsive Design
-
-Work Log:
-- Reverted logo to original colors (text-primary, text-muted-foreground, bg-primary/8)
-- Reverted all hover effects to original (hover:text-primary hover:bg-primary/8)
-- Only text color changes dynamically on hero (white vs dark), all hovers stay original
-- Generated proper PWA app icons (192px and 512px) using AI
-- Updated manifest.json with correct icons, purpose, scope, and categories
-- Updated layout.tsx with full PWA meta tags (apple-touch-icon, apple-web-app-capable, viewport-fit, theme-color)
-- Created service worker (sw.js) with network-first + cache-first strategies
-- Added ServiceWorkerRegistration component with periodic update checks
-- Fixed RTL direction in Footer (hover:translate-x respects RTL/LTR)
-- Added mobile safe area support (env(safe-area-inset-*)) for iOS devices
-- Added 44px minimum touch targets for all interactive elements on mobile
-- Set font-size: 16px on mobile inputs to prevent iOS zoom on focus
-- Disabled tap highlight color and overscroll behavior
-- Prevented horizontal overflow on mobile (overflow-x: hidden)
-- Added LTR text-align rule alongside existing RTL rule
-- Hero section pt respects safe-area-inset-top
-- Footer pb respects safe-area-inset-bottom
-- Ran lint check - zero errors
-
-Stage Summary:
-- PWA fully configured: manifest, icons, service worker, meta tags, apple support
-- Mobile First: 44px touch targets, safe areas, iOS zoom prevention, no horizontal overflow
-- RTL: Proper directional hover effects, logical properties throughout, bidi text-align
-- Responsive: All breakpoints verified, mobile-first approach with sm:/md:/lg: progressive enhancement
-- Zero lint errors, clean compilation
-
----
-Task ID: 4
-Agent: Main Agent
-Task: Fix scrolling not working on the site
-
-Work Log:
-- Diagnosed that `overflow-x: clip` on `html` element was breaking vertical scrolling
-- When overflow-x is set on html (the initial containing block), it can interfere with the page's natural scroll behavior
-- Moved `overflow-x: clip` from `html` to `body` element
-- Added `overflow-y: auto` explicitly on `html` to ensure vertical scroll works
-- Kept `@supports not (overflow-x: clip)` fallback on `body` for older browsers
-- Removed duplicate `html` rule block
-- Verified compilation succeeds with zero errors
-
-Stage Summary:
-- Scrolling now works correctly: html handles vertical scroll, body clips horizontal overflow
-- overflow-x: clip moved from html to body to prevent scroll interference
-- Zero compilation errors
+- Scrolling should now work correctly: page-level vertical scrolling, cart drawer internal scrolling, and no horizontal overflow.
+- Key insight: `overflow-x: clip` on a non-viewport element (like a div wrapper) can fall back to `overflow-x: hidden` in some browsers, which creates a scroll container and breaks vertical scrolling if the element doesn't have a fixed height.

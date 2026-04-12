@@ -95,9 +95,11 @@
   }
 }
 
-/* Smooth scroll */
+/* Viewport-level overflow control: clip horizontal, allow vertical scrolling */
 html {
   scroll-behavior: smooth;
+  overflow-x: clip;
+  overflow-y: auto;
 }
 
 /* Custom scrollbar */

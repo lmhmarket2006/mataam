@@ -34,7 +34,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col overflow-x-clip" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
       <div className="flex-1">
         {renderPage()}

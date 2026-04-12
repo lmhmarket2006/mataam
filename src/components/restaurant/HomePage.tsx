@@ -608,7 +608,7 @@ function ReviewsSection() {
         />
 
         {/* Mobile scroll container */}
-        <div className="relative">
+        <div className="relative overflow-x-clip">
           <div
             ref={scrollRef}
             className="flex gap-4 overflow-x-auto no-scrollbar pb-4 -mx-4 px-4 lg:mx-0 lg:px-0 lg:grid lg:grid-cols-3 lg:gap-5 lg:overflow-visible"
