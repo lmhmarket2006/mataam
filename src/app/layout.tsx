@@ -73,7 +73,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/images/icon-512.png" />
         <link rel="apple-touch-icon" sizes="192x192" href="/images/icon-192.png" />
       </head>
-      <body className={`${cairo.variable} font-sans antialiased bg-background text-foreground`}>
+      <body className={`${cairo.variable} font-sans antialiased bg-background text-foreground`} suppressHydrationWarning>
         {children}
         <Toaster />
         <ServiceWorkerRegistration />
