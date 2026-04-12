@@ -70,7 +70,7 @@ export default function Footer() {
   const { navigate } = useNavigation();
 
   return (
-    <footer className="mt-auto bg-primary text-primary-foreground">
+    <footer className="mt-auto bg-primary text-primary-foreground pb-[env(safe-area-inset-bottom)]">
       {/* Decorative top border */}
       <div className="h-1 bg-gradient-to-r from-gold/60 via-gold to-gold/60" />
 
@@ -126,7 +126,7 @@ export default function Footer() {
                       navigate(item.page);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className="text-primary-foreground/70 text-sm hover:text-gold transition-colors duration-200 hover:translate-x-1 inline-block"
+                    className="text-primary-foreground/70 text-sm hover:text-gold transition-colors duration-200 rtl:hover:-translate-x-1 ltr:hover:translate-x-1 inline-block"
                   >
                     {t(locale, item.labelKey)}
                   </button>

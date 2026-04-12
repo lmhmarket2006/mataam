@@ -124,6 +124,39 @@ html {
   text-align: right;
 }
 
+[dir="ltr"] {
+  text-align: left;
+}
+
+/* Mobile safe area support */
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* Prevent horizontal overflow on mobile */
+html, body {
+  overflow-x: hidden;
+  overscroll-behavior: none;
+}
+
+/* Mobile touch improvements */
+@media (max-width: 767px) {
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  input, textarea, select {
+    min-height: 44px;
+    font-size: 16px; /* Prevent iOS zoom on focus */
+  }
+}
+
 /* Animation keyframes */
 @keyframes fadeInUp {
   from {

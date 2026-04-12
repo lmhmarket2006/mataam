@@ -101,7 +101,7 @@ function HeroSection() {
   const { navigate } = useNavigation();
 
   return (
-    <section className="relative min-h-[70vh] sm:min-h-[80vh] flex items-center overflow-hidden -mt-16 sm:-mt-[72px] pt-16 sm:pt-[72px]">
+    <section className="relative min-h-[70vh] sm:min-h-[80vh] flex items-center overflow-hidden -mt-16 sm:-mt-[72px] pt-[calc(4rem+env(safe-area-inset-top))] sm:pt-[calc(4.5rem+env(safe-area-inset-top))]">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <img
