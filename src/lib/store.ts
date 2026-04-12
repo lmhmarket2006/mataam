@@ -50,6 +50,81 @@ export const useLanguage = create<LanguageState>((set) => ({
     })),
 }));
 
+// ============ DELIVERY ============
+export type OrderType = 'delivery' | 'pickup';
+export type PaymentMethod = 'cash' | 'online';
+
+export const DELIVERY_FEE = 10;
+export const FREE_DELIVERY_MIN = 100;
+
+interface DeliveryState {
+  orderType: OrderType;
+  address: string;
+  buildingNo: string;
+  floorNo: string;
+  apartmentNo: string;
+  customerPhone: string;
+  deliveryNotes: string;
+  paymentMethod: PaymentMethod;
+  setOrderType: (type: OrderType) => void;
+  setAddress: (address: string) => void;
+  setBuildingNo: (no: string) => void;
+  setFloorNo: (no: string) => void;
+  setApartmentNo: (no: string) => void;
+  setCustomerPhone: (phone: string) => void;
+  setDeliveryNotes: (notes: string) => void;
+  setPaymentMethod: (method: PaymentMethod) => void;
+  getDeliveryFee: (subtotal: number) => number;
+  resetDelivery: () => void;
+}
+
+const initialDeliveryState = {
+  orderType: 'delivery' as OrderType,
+  address: '',
+  buildingNo: '',
+  floorNo: '',
+  apartmentNo: '',
+  customerPhone: '',
+  deliveryNotes: '',
+  paymentMethod: 'cash' as PaymentMethod,
+};
+
+export const useDelivery = create<DeliveryState>()(
+  persist(
+    (set, get) => ({
+      ...initialDeliveryState,
+      setOrderType: (type) => set({ orderType: type }),
+      setAddress: (address) => set({ address }),
+      setBuildingNo: (no) => set({ buildingNo: no }),
+      setFloorNo: (no) => set({ floorNo: no }),
+      setApartmentNo: (no) => set({ apartmentNo: no }),
+      setCustomerPhone: (phone) => set({ customerPhone: phone }),
+      setDeliveryNotes: (notes) => set({ deliveryNotes: notes }),
+      setPaymentMethod: (method) => set({ paymentMethod: method }),
+      getDeliveryFee: (subtotal) => {
+        const { orderType } = get();
+        if (orderType === 'pickup') return 0;
+        if (subtotal >= FREE_DELIVERY_MIN) return 0;
+        return DELIVERY_FEE;
+      },
+      resetDelivery: () => set(initialDeliveryState),
+    }),
+    {
+      name: 'restaurant-delivery',
+      partialize: (state) => ({
+        orderType: state.orderType,
+        address: state.address,
+        buildingNo: state.buildingNo,
+        floorNo: state.floorNo,
+        apartmentNo: state.apartmentNo,
+        customerPhone: state.customerPhone,
+        deliveryNotes: state.deliveryNotes,
+        paymentMethod: state.paymentMethod,
+      }),
+    }
+  )
+);
+
 // ============ CART ============
 export interface CartItemOption {
   type: 'quantity' | 'cookingMethod' | 'riceType' | 'size' | 'extras';

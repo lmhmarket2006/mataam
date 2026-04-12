@@ -9,6 +9,8 @@ import {
   Trash2,
   MessageCircle,
   ChevronRight,
+  AlertCircle,
+  Truck,
 } from 'lucide-react';
 import {
   Sheet,
@@ -22,8 +24,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useCart, useLanguage, useNavigation, type CartItem } from '@/lib/store';
+import { useCart, useDelivery, useLanguage, useNavigation, type CartItem } from '@/lib/store';
 import { t } from '@/lib/i18n';
+import DeliveryInfo from './DeliveryInfo';
 
 export default function CartDrawer() {
   const {
@@ -38,16 +41,47 @@ export default function CartDrawer() {
   } = useCart();
   const { locale, isRTL } = useLanguage();
   const { navigate } = useNavigation();
+  const { orderType, address, buildingNo, floorNo, apartmentNo, customerPhone, deliveryNotes, paymentMethod, getDeliveryFee } = useDelivery();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showDelivery, setShowDelivery] = useState(false);
 
-  const total = getTotal();
+  const subtotal = getTotal();
+  const deliveryFee = getDeliveryFee(subtotal);
+  const total = subtotal + deliveryFee;
   const itemCount = getItemCount();
   const isEmpty = items.length === 0;
+
+  // Validate delivery form
+  const isDeliveryValid = (() => {
+    if (isEmpty) return false;
+    if (orderType === 'delivery') {
+      return address.trim().length >= 3 && customerPhone.length >= 10;
+    }
+    return true;
+  })();
 
   // Format WhatsApp message
   const formatWhatsAppMessage = useCallback(() => {
     const lines: string[] = [];
     lines.push('🍽️ طلب جديد من مطعم الواحة');
+    lines.push('');
+
+    // Order type
+    lines.push(`📦 نوع الطلب: ${orderType === 'delivery' ? '🚗 توصيل' : '🏪 استلام'}`);
+    lines.push('');
+
+    // Delivery details
+    if (orderType === 'delivery') {
+      lines.push('📍 تفاصيل التوصيل:');
+      lines.push(`   العنوان: ${address}`);
+      if (buildingNo) lines.push(`   رقم المبنى: ${buildingNo}`);
+      if (floorNo) lines.push(`   الطابق: ${floorNo}`);
+      if (apartmentNo) lines.push(`   الشقة: ${apartmentNo}`);
+      lines.push(`   الجوال: ${customerPhone}`);
+      if (deliveryNotes) lines.push(`   ملاحظات: ${deliveryNotes}`);
+    }
+
+    lines.push(`💳 طريقة الدفع: ${paymentMethod === 'cash' ? 'الدفع عند الاستلام' : 'الدفع الإلكتروني'}`);
     lines.push('');
     lines.push('📋 الأصناف:');
 
@@ -76,10 +110,16 @@ export default function CartDrawer() {
     });
 
     lines.push('');
-    lines.push(`💰 الإجمالي: ${total} ر.س`);
+    lines.push(`💰 المجموع: ${subtotal} ر.س`);
+    if (deliveryFee > 0) {
+      lines.push(`🚗 رسوم التوصيل: ${deliveryFee} ر.س`);
+    } else if (orderType === 'delivery') {
+      lines.push('🚗 التوصيل: مجاناً ✅');
+    }
+    lines.push(`💵 الإجمالي: ${total} ر.س`);
 
     return lines.join('\n');
-  }, [items, total]);
+  }, [items, total, subtotal, deliveryFee, orderType, address, buildingNo, floorNo, apartmentNo, customerPhone, deliveryNotes, paymentMethod]);
 
   // Handle WhatsApp checkout
   const handleWhatsAppCheckout = useCallback(() => {
@@ -222,20 +262,88 @@ export default function CartDrawer() {
         {/* ============ FOOTER ============ */}
         {!isEmpty && (
           <SheetFooter className="border-t border-border bg-background/95 backdrop-blur-sm px-4 sm:px-6 py-4 gap-3">
-            {/* Subtotal */}
-            <div className="flex items-center justify-between w-full">
-              <span className="text-sm font-medium text-muted-foreground">
-                {t(locale, 'subtotal')}
-              </span>
-              <span className="text-xl font-bold text-primary tabular-nums">
-                {total} {t(locale, 'sar')}
-              </span>
+            {/* Delivery Toggle Button */}
+            <Button
+              onClick={() => setShowDelivery(!showDelivery)}
+              variant={showDelivery ? 'default' : 'outline'}
+              className={`w-full rounded-xl text-sm font-medium h-10 transition-all ${
+                showDelivery
+                  ? 'bg-primary/10 text-primary border-primary/20 hover:bg-primary/15'
+                  : 'border-2 border-dashed border-border hover:border-primary/30'
+              }`}
+            >
+              <Truck className="w-4 h-4" />
+              {t(locale, 'deliveryTitle')}
+              {!showDelivery && !isDeliveryValid && orderType === 'delivery' && (
+                <AlertCircle className="w-4 h-4 text-destructive ms-auto" />
+              )}
+            </Button>
+
+            {/* Delivery Info Panel */}
+            <AnimatePresence>
+              {showDelivery && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="overflow-hidden"
+                >
+                  <DeliveryInfo subtotal={subtotal} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Price Summary */}
+            <div className="space-y-1.5 w-full">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">
+                  {t(locale, 'subtotal')}
+                </span>
+                <span className="text-sm font-medium text-foreground tabular-nums">
+                  {subtotal} {t(locale, 'sar')}
+                </span>
+              </div>
+              {orderType === 'delivery' && (
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">
+                    {t(locale, 'deliveryFee')}
+                  </span>
+                  <span className={`text-sm font-medium tabular-nums ${deliveryFee === 0 ? 'text-green-600' : 'text-foreground'}`}>
+                    {deliveryFee === 0 ? t(locale, 'freeDelivery') : `${deliveryFee} ${t(locale, 'sar')}`}
+                  </span>
+                </div>
+              )}
+              <Separator className="!mt-2" />
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-bold text-foreground">
+                  {t(locale, 'totalWithDelivery')}
+                </span>
+                <span className="text-xl font-bold text-primary tabular-nums">
+                  {total} {t(locale, 'sar')}
+                </span>
+              </div>
             </div>
+
+            {/* Validation Warning */}
+            {orderType === 'delivery' && !isDeliveryValid && showDelivery && (
+              <motion.p
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-xs text-destructive flex items-center gap-1.5 px-1"
+              >
+                <AlertCircle className="size-3" />
+                {locale === 'ar'
+                  ? 'يرجى إدخال العنوان ورقم الجوال'
+                  : 'Please enter address and phone number'}
+              </motion.p>
+            )}
 
             {/* WhatsApp Checkout */}
             <Button
               onClick={handleWhatsAppCheckout}
-              className="w-full h-12 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white text-sm font-bold shadow-lg shadow-[#25D366]/20 transition-all"
+              disabled={!isDeliveryValid}
+              className="w-full h-12 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] disabled:bg-muted disabled:text-muted-foreground text-white text-sm font-bold shadow-lg shadow-[#25D366]/20 transition-all"
               size="lg"
             >
               <MessageCircle className="w-5 h-5" />
