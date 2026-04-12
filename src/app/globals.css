@@ -98,6 +98,7 @@
 /* Smooth scroll */
 html {
   scroll-behavior: smooth;
+  overflow-y: auto;
 }
 
 /* Custom scrollbar */
@@ -134,14 +135,13 @@ body {
   -webkit-touch-callout: none;
 }
 
-/* Smooth scroll */
-html {
-  scroll-behavior: smooth;
+/* Prevent horizontal overflow - clip on body only, NOT html (html overflow breaks scrolling) */
+body {
   overflow-x: clip;
 }
 
 @supports not (overflow-x: clip) {
-  html {
+  body {
     overflow-x: hidden;
   }
 }

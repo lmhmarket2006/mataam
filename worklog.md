@@ -80,3 +80,22 @@ Stage Summary:
 - RTL: Proper directional hover effects, logical properties throughout, bidi text-align
 - Responsive: All breakpoints verified, mobile-first approach with sm:/md:/lg: progressive enhancement
 - Zero lint errors, clean compilation
+
+---
+Task ID: 4
+Agent: Main Agent
+Task: Fix scrolling not working on the site
+
+Work Log:
+- Diagnosed that `overflow-x: clip` on `html` element was breaking vertical scrolling
+- When overflow-x is set on html (the initial containing block), it can interfere with the page's natural scroll behavior
+- Moved `overflow-x: clip` from `html` to `body` element
+- Added `overflow-y: auto` explicitly on `html` to ensure vertical scroll works
+- Kept `@supports not (overflow-x: clip)` fallback on `body` for older browsers
+- Removed duplicate `html` rule block
+- Verified compilation succeeds with zero errors
+
+Stage Summary:
+- Scrolling now works correctly: html handles vertical scroll, body clips horizontal overflow
+- overflow-x: clip moved from html to body to prevent scroll interference
+- Zero compilation errors
