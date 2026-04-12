@@ -1,0 +1,21 @@
+{
+  "name": "مطعم الواحة | Al Wahah Restaurant",
+  "short_name": "الواحة",
+  "description": "مطعم الواحة - وجهتكم الأولى للأطباق السعودية واليمنية الأصيلة",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FEFCF9",
+  "theme_color": "#6B4226",
+  "orientation": "portrait-primary",
+  "dir": "rtl",
+  "lang": "ar",
+  "icons": [
+    {
+      "src": "/images/hero-bg.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["food", "restaurant"]
+}
