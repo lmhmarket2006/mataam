@@ -201,7 +201,7 @@ export default function ItemCustomizer() {
                         <span className="w-1 h-4 rounded-full bg-primary" />
                         {t(locale, 'riceType')}
                       </h3>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {riceVariants.map((variant) => {
                           const isSelected = selectedVariant?.labelAr === variant.labelAr;
                           const label = locale === 'ar' ? variant.labelAr : variant.labelEn;
@@ -213,7 +213,7 @@ export default function ItemCustomizer() {
                               whileTap={{ scale: 0.98 }}
                               onClick={() => setSelectedVariant(variant)}
                               className={`
-                                relative flex items-center justify-between px-3 py-2.5 rounded-xl border-2 text-sm font-medium
+                                relative flex items-center justify-between px-3 py-2.5 rounded-xl border-2 text-sm font-medium gap-2
                                 transition-all duration-200 cursor-pointer
                                 ${
                                   isSelected
@@ -222,7 +222,7 @@ export default function ItemCustomizer() {
                                 }
                               `}
                             >
-                              <span className="truncate me-2">{label}</span>
+                              <span className="flex-1 text-start">{label}</span>
                               <span className="shrink-0 text-xs font-bold">
                                 {variant.price} {t(locale, 'sar')}
                               </span>
@@ -261,7 +261,7 @@ export default function ItemCustomizer() {
                               whileTap={{ scale: 0.99 }}
                               onClick={() => setSelectedVariant(variant)}
                               className={`
-                                relative flex items-center justify-between px-4 py-3 rounded-xl border-2 text-sm font-medium
+                                relative flex items-center justify-between px-4 py-3 rounded-xl border-2 text-sm font-medium gap-2
                                 transition-all duration-200 cursor-pointer
                                 ${
                                   isSelected
@@ -270,7 +270,7 @@ export default function ItemCustomizer() {
                                 }
                               `}
                             >
-                              <span className="truncate me-2">{label}</span>
+                              <span className="flex-1 text-start">{label}</span>
                               <span className="shrink-0 text-xs font-bold">
                                 {variant.price} {t(locale, 'sar')}
                               </span>
@@ -342,7 +342,7 @@ export default function ItemCustomizer() {
                           htmlFor={`extra-${extra.id}-${menuItem.id}`}
                           className={`
                             flex items-center gap-3 px-3 py-2.5 rounded-xl border-2 cursor-pointer
-                            transition-all duration-200
+                            transition-all duration-200 min-w-0
                             ${
                               isChecked
                                 ? 'border-gold bg-gold/5'
@@ -357,7 +357,7 @@ export default function ItemCustomizer() {
                             onCheckedChange={() => toggleExtra(extra.id)}
                             className="border-gold data-[state=checked]:bg-gold data-[state=checked]:border-gold"
                           />
-                          <span className="flex-1 text-sm font-medium text-foreground">
+                          <span className="flex-1 text-sm font-medium text-foreground min-w-0 break-words">
                             {extraName}
                           </span>
                           <span className="text-xs font-semibold text-muted-foreground">
