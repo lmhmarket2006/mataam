@@ -78,14 +78,14 @@ export default function Header() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setMobileNavOpen(true)}
-                className={`${useWhiteText ? 'text-white hover:bg-white/10 hover:text-white' : 'text-foreground hover:bg-primary/10 hover:text-primary'}`}
+                className={`${useWhiteText ? 'text-white' : 'text-foreground'} hover:bg-primary/10 hover:text-primary`}
                 aria-label={t(locale, 'menu')}
               >
                 <MenuIcon className="size-5" />
               </Button>
             </div>
 
-            {/* Logo */}
+            {/* Logo - always original colors */}
             <motion.div
               className="flex items-center gap-2.5 cursor-pointer"
               onClick={() => navigate('home')}
@@ -94,17 +94,17 @@ export default function Header() {
             >
               {/* Decorative element */}
               <div className="relative flex items-center justify-center">
-                <div className={`absolute w-9 h-9 rounded-full ${useWhiteText ? 'bg-white/20' : 'bg-primary/8'}`} />
+                <div className="absolute w-9 h-9 rounded-full bg-primary/8" />
                 <div className="relative flex flex-col items-center gap-[3px]">
-                  <div className={`w-2 h-2 rotate-45 rounded-[2px] ${useWhiteText ? 'bg-gold' : 'bg-gold'}`} />
-                  <div className={`w-1.5 h-1.5 rotate-45 rounded-[1.5px] ${useWhiteText ? 'bg-white' : 'bg-primary'}`} />
+                  <div className="w-2 h-2 bg-gold rotate-45 rounded-[2px]" />
+                  <div className="w-1.5 h-1.5 bg-primary rotate-45 rounded-[1.5px]" />
                 </div>
               </div>
               <div className="flex flex-col">
-                <span className={`text-lg sm:text-xl font-bold leading-tight tracking-wide ${useWhiteText ? 'text-white' : 'text-primary'}`}>
+                <span className="text-lg sm:text-xl font-bold text-primary leading-tight tracking-wide">
                   {locale === 'ar' ? 'الواحة' : 'Al Wahah'}
                 </span>
-                <span className={`text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none ${useWhiteText ? 'text-white/70' : 'text-muted-foreground'}`}>
+                <span className="text-[9px] sm:text-[10px] text-muted-foreground font-medium tracking-wider uppercase leading-none">
                   {locale === 'ar' ? 'مطعم' : 'Restaurant'}
                 </span>
               </div>
@@ -122,13 +122,9 @@ export default function Header() {
                       relative px-3.5 py-2 rounded-lg text-sm font-medium
                       transition-colors duration-200
                       ${
-                        useWhiteText
-                          ? isActive
-                            ? 'text-white'
-                            : 'text-white/70 hover:text-white hover:bg-white/10'
-                          : isActive
-                            ? 'text-primary'
-                            : 'text-foreground/70 hover:text-primary hover:bg-primary/8'
+                        isActive
+                          ? 'text-primary'
+                          : `${useWhiteText ? 'text-white/70' : 'text-foreground/70'} hover:text-primary hover:bg-primary/8`
                       }
                     `}
                     whileHover={{ scale: 1.03 }}
@@ -138,7 +134,7 @@ export default function Header() {
                     {isActive && (
                       <motion.div
                         layoutId="desktop-active-nav"
-                        className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full ${useWhiteText ? 'bg-gold' : 'bg-primary'}`}
+                        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-5 h-0.5 bg-primary rounded-full"
                         transition={{
                           type: 'spring',
                           stiffness: 500,
@@ -159,7 +155,7 @@ export default function Header() {
                   variant="ghost"
                   size="sm"
                   onClick={toggleLanguage}
-                  className={`hidden sm:flex items-center gap-1.5 text-xs font-medium ${useWhiteText ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-foreground/70 hover:text-primary hover:bg-primary/8'}`}
+                  className={`hidden sm:flex items-center gap-1.5 text-xs font-medium ${useWhiteText ? 'text-white/70' : 'text-foreground/70'} hover:text-primary hover:bg-primary/8`}
                 >
                   <Languages className="size-3.5" />
                   <span>{t(locale, 'language')}</span>
@@ -171,7 +167,7 @@ export default function Header() {
                 variant="ghost"
                 size="icon"
                 onClick={toggleLanguage}
-                className={`sm:hidden ${useWhiteText ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-foreground/70 hover:text-primary hover:bg-primary/8'}`}
+                className={`sm:hidden ${useWhiteText ? 'text-white/70' : 'text-foreground/70'} hover:text-primary hover:bg-primary/8`}
                 aria-label="Toggle language"
               >
                 <Languages className="size-4" />
@@ -183,7 +179,7 @@ export default function Header() {
                   variant="ghost"
                   size="icon"
                   onClick={openCart}
-                  className={`relative ${useWhiteText ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-foreground/70 hover:text-primary hover:bg-primary/8'}`}
+                  className={`relative ${useWhiteText ? 'text-white/70' : 'text-foreground/70'} hover:text-primary hover:bg-primary/8`}
                   aria-label={t(locale, 'cart')}
                 >
                   <ShoppingBag className="size-5" />
