@@ -130,18 +130,13 @@ html {
 
 /* Mobile safe area support */
 body {
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
 }
 
-/* Prevent horizontal overflow on mobile */
-html, body {
-  overflow-x: hidden;
-  overscroll-behavior: none;
+/* Prevent horizontal overflow */
+html {
+  overflow-x: clip;
 }
 
 /* Mobile touch improvements */
