@@ -221,23 +221,35 @@ function PopularDishesSection() {
           subtitle={t(locale, 'popularDishesSubtitle')}
         />
 
-        {/* Responsive grid: 2 cols on mobile, 3 on tablet, 4 on desktop */}
-        <motion.div
-          variants={staggerContainer}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: '-50px' }}
-          className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-5"
-        >
-          {popularItems.map((item, i) => (
-            <PopularItemCard
-              key={item.id}
-              item={item}
-              index={i}
-              onAdd={openCustomizer}
-            />
-          ))}
-        </motion.div>
+        {popularItems.length === 0 ? (
+          <div className="text-center py-10 sm:py-14 rounded-2xl border border-dashed border-border/70 bg-muted/20">
+            <p className="text-sm font-medium text-foreground">
+              {locale === 'ar' ? 'لا توجد أطباق مميزة حالياً.' : 'No popular dishes to show right now.'}
+            </p>
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              {locale === 'ar'
+                ? 'تصفح القائمة الكاملة لاختيار وجبتك.'
+                : 'Browse the full menu to pick your meal.'}
+            </p>
+          </div>
+        ) : (
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-50px' }}
+            className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-5"
+          >
+            {popularItems.map((item, i) => (
+              <PopularItemCard
+                key={item.id}
+                item={item}
+                index={i}
+                onAdd={openCustomizer}
+              />
+            ))}
+          </motion.div>
+        )}
 
         {/* View All button */}
         <div className="mt-8 sm:mt-10 text-center">

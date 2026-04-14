@@ -277,7 +277,41 @@ export default function CartDrawer() {
         </div>
       </div>
       {checkoutErr ? (
-        <p className="text-xs text-destructive px-1">{checkoutErr}</p>
+        <p className="text-xs text-destructive px-1 whitespace-pre-line">{checkoutErr}</p>
+      ) : null}
+      {waFallback ? (
+        <div className="flex flex-col gap-2 w-full">
+          <a
+            href={waFallback.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#25D366]/40 bg-[#25D366]/10 px-3 py-2.5 text-sm font-semibold text-[#128C7E] hover:bg-[#25D366]/15"
+          >
+            <ExternalLink className="size-4 shrink-0" />
+            {locale === 'ar' ? 'فتح واتساب' : 'Open WhatsApp'}
+          </a>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="w-full rounded-xl"
+            onClick={() => {
+              void navigator.clipboard.writeText(waFallback.plainMessage).then(() => {
+                setCopyDone(true);
+                setTimeout(() => setCopyDone(false), 2000);
+              });
+            }}
+          >
+            <Copy className="size-4 shrink-0" />
+            {copyDone
+              ? locale === 'ar'
+                ? 'تم النسخ'
+                : 'Copied'
+              : locale === 'ar'
+                ? 'نسخ الرسالة'
+                : 'Copy message'}
+          </Button>
+        </div>
       ) : null}
       <Button
         onClick={() => void handleWhatsAppCheckout()}
