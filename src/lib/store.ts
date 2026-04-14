@@ -54,7 +54,9 @@ export const useLanguage = create<LanguageState>((set) => ({
 export type OrderType = 'delivery' | 'pickup';
 export type PaymentMethod = 'cash' | 'online';
 
+/** @deprecated use delivery state from hydratePricing */
 export const DELIVERY_FEE = 10;
+/** @deprecated use delivery state from hydratePricing */
 export const FREE_DELIVERY_MIN = 100;
 
 interface DeliveryState {
@@ -67,6 +69,9 @@ interface DeliveryState {
   customerPhone: string;
   deliveryNotes: string;
   paymentMethod: PaymentMethod;
+  /** SAR — from RestaurantSettings via hydratePricing */
+  deliveryFeeSar: number;
+  freeDeliveryMinSar: number;
   setOrderType: (type: OrderType) => void;
   setCustomerName: (name: string) => void;
   setAddress: (address: string) => void;
@@ -76,6 +81,7 @@ interface DeliveryState {
   setCustomerPhone: (phone: string) => void;
   setDeliveryNotes: (notes: string) => void;
   setPaymentMethod: (method: PaymentMethod) => void;
+  hydratePricing: (deliveryFeeSar: number, freeDeliveryMinSar: number) => void;
   getDeliveryFee: (subtotal: number) => number;
   resetDelivery: () => void;
 }
@@ -132,9 +138,11 @@ export const useDelivery = create<DeliveryState>()(
 
 // ============ CART ============
 export interface CartItemOption {
-  type: 'quantity' | 'cookingMethod' | 'riceType' | 'size' | 'extras';
+  type: 'quantity' | 'cookingMethod' | 'riceType' | 'size' | 'extras' | 'optionGroup';
   value: string;
   priceModifier?: number;
+  /** DB OptionValue id — required for server-side pricing */
+  optionValueId?: string;
 }
 
 export interface CartItem {
