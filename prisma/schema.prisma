@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,20 +10,258 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ---------- Auth ----------
+// Monetary amounts elsewhere use Int = smallest currency unit (e.g. halalas for SAR).
+
+enum UserRole {
+  ADMIN
+}
+
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         UserRole @default(ADMIN)
+  name         String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ---------- Single restaurant (one logical row; id = "default" in app/seed) ----------
+
+model RestaurantSettings {
+  id String @id @default("default")
+
+  nameAr String
+  nameEn String
+
+  logo   String?
+  currency String @default("SAR")
+
+  whatsappNumber String?
+
+  defaultPickupAddressAr String?
+  defaultPickupAddressEn String?
+
+  /// Delivery fee in smallest currency unit (e.g. halalas) when below free-delivery threshold.
+  deliveryFeeAmount Int @default(0) @map("delivery_fee_amount")
+  /// Subtotal in smallest currency unit above which delivery fee is waived.
+  freeDeliveryMinTotal Int @default(0) @map("free_delivery_min_total")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model Post {
+// ---------- Menu ----------
+
+model Category {
   id        String   @id @default(cuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
+  nameAr    String
+  nameEn    String
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  items MenuItem[]
+
+  @@index([sortOrder])
+}
+
+model MenuItem {
+  id            String   @id @default(cuid())
+  categoryId    String
+  nameAr        String
+  nameEn        String
+  descriptionAr String?
+  descriptionEn String?
+  /// Price in smallest currency unit (e.g. halalas).
+  price         Int
+  image         String?
+  available     Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  optionGroups OptionGroup[]
+  orderItems   OrderItem[]
+
+  @@index([categoryId])
+  @@index([available])
+}
+
+enum OptionSelectionType {
+  SINGLE
+  MULTIPLE
+}
+
+model OptionGroup {
+  id String @id @default(cuid())
+
+  menuItemId String
+
+  nameAr String
+  nameEn String
+
+  selectionType OptionSelectionType @default(SINGLE)
+  isRequired    Boolean             @default(false)
+  minSelect     Int?
+  maxSelect     Int?
+
+  sortOrder Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+
+  values OptionValue[]
+
+  @@index([menuItemId])
+}
+
+model OptionValue {
+  id String @id @default(cuid())
+
+  optionGroupId String
+
+  nameAr String
+  nameEn String
+
+  /// Extra charge in smallest currency unit (e.g. halalas); 0 if no surcharge.
+  priceModifier Int @default(0)
+
+  sortOrder Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  optionGroup OptionGroup @relation(fields: [optionGroupId], references: [id], onDelete: Cascade)
+
+  @@index([optionGroupId])
+}
+
+// ---------- Branches ----------
+
+model Branch {
+  id String @id @default(cuid())
+
+  nameAr String
+  nameEn String
+
+  addressAr String
+  addressEn String
+
+  cityAr String?
+  cityEn String?
+
+  phone String
+
+  hoursAr String?
+  hoursEn String?
+
+  lat Float
+  lng Float
+
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders Order[]
+
+  @@index([isActive])
+}
+
+// ---------- Orders ----------
+
+enum OrderType {
+  DELIVERY
+  PICKUP
+}
+
+enum PaymentMethod {
+  CASH
+  ONLINE
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  COMPLETED
+  CANCELLED
+}
+
+model Order {
+  id String @id @default(cuid())
+
+  customerName  String
+  customerPhone String
+
+  orderType OrderType
+
+  address     String?
+  buildingNo  String?
+  floorNo     String?
+  apartmentNo String?
+
+  deliveryNotes String?
+
+  paymentMethod PaymentMethod
+
+  /// Subtotal in smallest currency unit (e.g. halalas).
+  subtotal    Int
+  /// Delivery fee in smallest currency unit (e.g. halalas).
+  deliveryFee Int
+  /// Grand total in smallest currency unit (e.g. halalas).
+  total       Int
+
+  status OrderStatus @default(PENDING)
+
+  /// Optional: branch for pickup or preferred branch context.
+  branchId String?
+  branch   Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items OrderItem[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([customerPhone])
+}
+
+model OrderItem {
+  id String @id @default(cuid())
+
+  orderId String
+
+  menuItemId String?
+
+  /// Item display name at time of order (Arabic or chosen locale in app).
+  nameSnapshot String
+  /// Unit price in smallest currency unit (e.g. halalas) at time of order.
+  unitPrice Int
+  quantity  Int
+  /// Line total in smallest currency unit (e.g. halalas).
+  lineTotal Int
+  notes     String?
+
+  /// JSON snapshot of customer-selected options at checkout (names + price modifiers in halalas).
+  /// Example element: { "groupNameAr": "...", "groupNameEn": "...", "valueNameAr": "...", "valueNameEn": "...", "priceModifier": 0 }
+  optionsSnapshot Json?
+
+  createdAt DateTime @default(now())
+
+  order    Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem MenuItem? @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
 }
