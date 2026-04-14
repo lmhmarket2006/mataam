@@ -11,6 +11,8 @@ import {
   ChevronRight,
   AlertCircle,
   Truck,
+  Copy,
+  ExternalLink,
 } from 'lucide-react';
 import {
   Sheet,
