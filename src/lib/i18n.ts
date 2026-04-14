@@ -245,7 +245,6 @@ export const translations = {
     mostPopular: 'الأكثر شعبية',
     newItem: 'جديد',
     bestSeller: 'الأكثر مبيعاً',
-    spicy: 'حار',
   },
   en: {
     // Restaurant Info
@@ -491,7 +490,6 @@ export const translations = {
     mostPopular: 'Most Popular',
     newItem: 'New',
     bestSeller: 'Best Seller',
-    spicy: 'Spicy',
   },
 } as const;
 

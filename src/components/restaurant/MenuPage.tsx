@@ -25,7 +25,7 @@ const fadeUp = {
   visible: (i: number = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.5, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] as const },
   }),
 };
 
@@ -41,7 +41,7 @@ const scaleIn = {
   visible: {
     opacity: 1,
     scale: 1,
-    transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] as const },
   },
 };
 
