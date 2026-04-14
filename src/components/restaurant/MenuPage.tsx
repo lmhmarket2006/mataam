@@ -228,9 +228,11 @@ function CategorySection({
 function CategoryNav({
   activeCategory,
   onSelectCategory,
+  categories,
 }: {
   activeCategory: string;
   onSelectCategory: (id: string) => void;
+  categories: PublicMenuCategory[];
 }) {
   const { locale } = useLanguage();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -317,7 +319,7 @@ function CategoryNav({
           ref={scrollRef}
           className="flex gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar py-2.5 sm:py-3"
         >
-          {menuCategories.map((cat) => {
+          {categories.map((cat) => {
             const isActive = activeCategory === cat.id;
             return (
               <button
@@ -445,6 +447,7 @@ export default function MenuPage() {
       <CategoryNav
         activeCategory={effectiveActiveCategory}
         onSelectCategory={setActiveCategory}
+        categories={menuCategories}
       />
 
       {/* Menu Content */}
