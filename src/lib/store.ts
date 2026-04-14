@@ -59,6 +59,7 @@ export const FREE_DELIVERY_MIN = 100;
 
 interface DeliveryState {
   orderType: OrderType;
+  customerName: string;
   address: string;
   buildingNo: string;
   floorNo: string;
@@ -67,6 +68,7 @@ interface DeliveryState {
   deliveryNotes: string;
   paymentMethod: PaymentMethod;
   setOrderType: (type: OrderType) => void;
+  setCustomerName: (name: string) => void;
   setAddress: (address: string) => void;
   setBuildingNo: (no: string) => void;
   setFloorNo: (no: string) => void;
@@ -80,6 +82,7 @@ interface DeliveryState {
 
 const initialDeliveryState = {
   orderType: 'delivery' as OrderType,
+  customerName: '',
   address: '',
   buildingNo: '',
   floorNo: '',
@@ -94,6 +97,7 @@ export const useDelivery = create<DeliveryState>()(
     (set, get) => ({
       ...initialDeliveryState,
       setOrderType: (type) => set({ orderType: type }),
+      setCustomerName: (name) => set({ customerName: name }),
       setAddress: (address) => set({ address }),
       setBuildingNo: (no) => set({ buildingNo: no }),
       setFloorNo: (no) => set({ floorNo: no }),
@@ -113,6 +117,7 @@ export const useDelivery = create<DeliveryState>()(
       name: 'restaurant-delivery',
       partialize: (state) => ({
         orderType: state.orderType,
+        customerName: state.customerName,
         address: state.address,
         buildingNo: state.buildingNo,
         floorNo: state.floorNo,

@@ -40,7 +40,18 @@ export default function CartDrawer() {
   } = useCart();
   const { locale, isRTL } = useLanguage();
   const { navigate } = useNavigation();
-  const { orderType, address, buildingNo, floorNo, apartmentNo, customerPhone, deliveryNotes, paymentMethod, getDeliveryFee } = useDelivery();
+  const {
+    orderType,
+    customerName,
+    address,
+    buildingNo,
+    floorNo,
+    apartmentNo,
+    customerPhone,
+    deliveryNotes,
+    paymentMethod,
+    getDeliveryFee,
+  } = useDelivery();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showDelivery, setShowDelivery] = useState(false);
 
@@ -52,60 +63,86 @@ export default function CartDrawer() {
 
   const isDeliveryValid = (() => {
     if (isEmpty) return false;
+    const hasName = customerName.trim().length >= 2;
+    const hasPhone = customerPhone.trim().length >= 10;
     if (orderType === 'delivery') {
-      return address.trim().length >= 3 && customerPhone.length >= 10;
+      return hasName && hasPhone && address.trim().length >= 3;
     }
-    return true;
+    return hasName && hasPhone;
   })();
 
   const formatWhatsAppMessage = useCallback(() => {
+    const optionLabelMap: Record<string, string> = {
+      quantity: 'اختيار الكمية/الحجم',
+      cookingMethod: 'طريقة الطبخ',
+      riceType: 'نوع الرز',
+      size: 'الحجم',
+      extras: 'الإضافات',
+    };
+
+    const buildAddressLine = () => {
+      const details: string[] = [];
+      if (address.trim()) details.push(address.trim());
+      if (buildingNo.trim()) details.push(`مبنى ${buildingNo.trim()}`);
+      if (floorNo.trim()) details.push(`طابق ${floorNo.trim()}`);
+      if (apartmentNo.trim()) details.push(`شقة ${apartmentNo.trim()}`);
+      return details.join(' - ');
+    };
+
     const lines: string[] = [];
-    lines.push('🍽️ طلب جديد من مطعم الواحة');
+    lines.push('==============================');
+    lines.push('🍽️ *مطعم الواحة*');
+    lines.push('🧾 *طلب جديد عبر واتساب*');
+    lines.push('==============================');
     lines.push('');
-    lines.push(`📦 نوع الطلب: ${orderType === 'delivery' ? '🚗 توصيل' : '🏪 استلام'}`);
+    lines.push('👤 *بيانات العميل*');
+    lines.push(`- الاسم: ${customerName.trim() || 'غير محدد'}`);
+    lines.push(`- الجوال: ${customerPhone.trim() || 'غير محدد'}`);
     lines.push('');
+    lines.push('📦 *تفاصيل الطلب*');
+    lines.push(`- نوع الطلب: ${orderType === 'delivery' ? '🚗 توصيل' : '🏪 استلام من الفرع'}`);
     if (orderType === 'delivery') {
-      lines.push('📍 تفاصيل التوصيل:');
-      lines.push(`   العنوان: ${address}`);
-      if (buildingNo) lines.push(`   رقم المبنى: ${buildingNo}`);
-      if (floorNo) lines.push(`   الطابق: ${floorNo}`);
-      if (apartmentNo) lines.push(`   الشقة: ${apartmentNo}`);
-      lines.push(`   الجوال: ${customerPhone}`);
-      if (deliveryNotes) lines.push(`   ملاحظات: ${deliveryNotes}`);
+      const addressLine = buildAddressLine();
+      if (addressLine) {
+        lines.push(`- العنوان: ${addressLine}`);
+      }
+      if (deliveryNotes.trim()) {
+        lines.push(`- ملاحظات التوصيل: ${deliveryNotes.trim()}`);
+      }
     }
-    lines.push(`💳 طريقة الدفع: ${paymentMethod === 'cash' ? 'الدفع عند الاستلام' : 'الدفع الإلكتروني'}`);
+    lines.push(`- طريقة الدفع: ${paymentMethod === 'cash' ? 'الدفع عند الاستلام' : 'الدفع الإلكتروني'}`);
     lines.push('');
-    lines.push('📋 الأصناف:');
+    lines.push('🛒 *الأصناف*');
     items.forEach((item, index) => {
-      const variantOption = item.options.find(
-        (o) => o.type === 'riceType' || o.type === 'quantity'
-      );
-      const variantLabel = variantOption ? ` - ${variantOption.value}` : '';
-      lines.push(`${index + 1}. ${item.name}${variantLabel} × ${item.quantity} = ${item.totalPrice} ر.س`);
-      const extrasOptions = item.options.filter((o) => o.type === 'extras');
-      if (extrasOptions.length > 0) {
-        const extrasNames = extrasOptions.map((o) => o.value).join('، ');
-        lines.push(`   الإضافات: ${extrasNames}`);
+      lines.push(`${index + 1}) ${item.name}`);
+      lines.push(`   - الكمية: ${item.quantity}`);
+      if (item.options.length > 0) {
+        lines.push('   - الخيارات:');
+        item.options.forEach((option) => {
+          const optionLabel = optionLabelMap[option.type] ?? option.type;
+          lines.push(`     • ${optionLabel}: ${option.value}`);
+        });
       }
-      if (item.notes) {
-        lines.push(`   ملاحظات: ${item.notes}`);
+      if (item.notes.trim()) {
+        lines.push(`   - ملاحظات الصنف: ${item.notes.trim()}`);
       }
+      lines.push(`   - إجمالي الصنف: ${item.totalPrice} ر.س`);
+      lines.push('');
     });
-    lines.push('');
-    lines.push(`💰 المجموع: ${subtotal} ر.س`);
-    if (deliveryFee > 0) {
-      lines.push(`🚗 رسوم التوصيل: ${deliveryFee} ر.س`);
-    } else if (orderType === 'delivery') {
-      lines.push('🚗 التوصيل: مجاناً ✅');
-    }
-    lines.push(`💵 الإجمالي: ${total} ر.س`);
+    lines.push('💰 *الملخص المالي*');
+    lines.push(`- المجموع الفرعي: ${subtotal} ر.س`);
+    lines.push(`- رسوم التوصيل: ${orderType === 'delivery' ? `${deliveryFee} ر.س` : '0 ر.س'}`);
+    lines.push(`- الإجمالي: ${total} ر.س`);
     return lines.join('\n');
-  }, [items, total, subtotal, deliveryFee, orderType, address, buildingNo, floorNo, apartmentNo, customerPhone, deliveryNotes, paymentMethod]);
+  }, [items, total, subtotal, deliveryFee, orderType, customerName, address, buildingNo, floorNo, apartmentNo, customerPhone, deliveryNotes, paymentMethod]);
 
   const handleWhatsAppCheckout = useCallback(() => {
+    const envNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.trim() ?? '';
+    const safeNumber = envNumber !== '' ? envNumber : '966500000000';
+    const whatsappNumber = safeNumber.replace(/[^\d]/g, '');
     const message = formatWhatsAppMessage();
     const encodedMessage = encodeURIComponent(message);
-    const url = `https://wa.me/966548599988?text=${encodedMessage}`;
+    const url = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
     window.open(url, '_blank');
   }, [formatWhatsAppMessage]);
 
@@ -142,7 +179,7 @@ export default function CartDrawer() {
           className="text-xs text-destructive flex items-center gap-1.5 px-1"
         >
           <AlertCircle className="size-3" />
-          {locale === 'ar' ? 'يرجى إدخال العنوان ورقم الجوال' : 'Please enter address and phone number'}
+          {locale === 'ar' ? 'يرجى إدخال الاسم والجوال، وللتوصيل أضف العنوان' : 'Please enter name and phone; add address for delivery'}
         </motion.p>
       )}
       <div className="space-y-1.5 w-full">

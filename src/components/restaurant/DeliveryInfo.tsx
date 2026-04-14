@@ -7,6 +7,7 @@ import {
   Store,
   MapPin,
   Phone,
+  User,
   Building2,
   Layers,
   DoorOpen,
@@ -34,6 +35,7 @@ export default function DeliveryInfo({ subtotal }: DeliveryInfoProps) {
   const { locale, isRTL } = useLanguage();
   const {
     orderType,
+    customerName,
     address,
     buildingNo,
     floorNo,
@@ -42,6 +44,7 @@ export default function DeliveryInfo({ subtotal }: DeliveryInfoProps) {
     deliveryNotes,
     paymentMethod,
     setOrderType,
+    setCustomerName,
     setAddress,
     setBuildingNo,
     setFloorNo,
@@ -140,6 +143,41 @@ export default function DeliveryInfo({ subtotal }: DeliveryInfoProps) {
               </div>
 
               {/* Delivery Details - only when delivery */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-foreground flex items-center gap-1.5">
+                  <User className="size-3 text-primary" />
+                  {locale === 'ar' ? 'اسم العميل' : 'Customer Name'}
+                  <span className="text-destructive">*</span>
+                </label>
+                <Input
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder={locale === 'ar' ? 'أدخل الاسم' : 'Enter customer name'}
+                  dir={isRTL ? 'rtl' : 'ltr'}
+                  className="text-sm h-10 rounded-lg border-2 border-border focus:border-primary/50"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-foreground flex items-center gap-1.5">
+                  <Phone className="size-3 text-primary" />
+                  {t(locale, 'customerPhone')}
+                  <span className="text-destructive">*</span>
+                </label>
+                <div dir="ltr" className="text-start">
+                  <Input
+                    value={customerPhone}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9+]/g, '');
+                      setCustomerPhone(val);
+                    }}
+                    placeholder="05XXXXXXXX"
+                    className="text-sm h-10 rounded-lg border-2 border-border focus:border-primary/50"
+                    maxLength={12}
+                  />
+                </div>
+              </div>
+
               <AnimatePresence mode="wait">
                 {orderType === 'delivery' && (
                   <motion.div
@@ -205,27 +243,6 @@ export default function DeliveryInfo({ subtotal }: DeliveryInfoProps) {
                           placeholder={t(locale, 'apartmentNoPlaceholder')}
                           dir={isRTL ? 'rtl' : 'ltr'}
                           className="text-sm h-10 rounded-lg border-2 border-border focus:border-primary/50"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Customer Phone */}
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-foreground flex items-center gap-1.5">
-                        <Phone className="size-3 text-primary" />
-                        {t(locale, 'customerPhone')}
-                        <span className="text-destructive">*</span>
-                      </label>
-                      <div dir="ltr" className="text-start">
-                        <Input
-                          value={customerPhone}
-                          onChange={(e) => {
-                            const val = e.target.value.replace(/[^0-9+]/g, '');
-                            setCustomerPhone(val);
-                          }}
-                          placeholder="05XXXXXXXX"
-                          className="text-sm h-10 rounded-lg border-2 border-border focus:border-primary/50"
-                          maxLength={12}
                         />
                       </div>
                     </div>
