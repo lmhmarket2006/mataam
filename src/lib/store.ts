@@ -189,6 +189,30 @@ interface CartState {
 
 let cartIdCounter = 0;
 
+/** Persist version: bump when cart shape / checkout rules change (clears or filters legacy lines). */
+export const CART_PERSIST_VERSION = 2;
+
+export const CART_MIGRATION_FLAG = 'mataam-cart-migrated';
+
+function setCartMigrationNoticeFlag() {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.setItem(CART_MIGRATION_FLAG, '1');
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Cart lines the checkout API can price (DB option ids only). */
+export function isCartLineCompatibleWithCheckout(item: CartItem): boolean {
+  if (!item.menuItemId?.trim()) return false;
+  for (const o of item.options) {
+    if (o.type !== 'optionGroup') return false;
+    if (!o.optionValueId?.trim()) return false;
+  }
+  return true;
+}
+
 export const useCart = create<CartState>()(
   persist(
     (set, get) => ({
@@ -234,7 +258,23 @@ export const useCart = create<CartState>()(
     }),
     {
       name: 'restaurant-cart',
+      version: CART_PERSIST_VERSION,
       partialize: (state) => ({ items: state.items }),
+      migrate: (persisted, version) => {
+        const raw = persisted as { items?: CartItem[] } | null;
+        const items = Array.isArray(raw?.items) ? raw.items : [];
+
+        if (version < CART_PERSIST_VERSION) {
+          setCartMigrationNoticeFlag();
+          return { items: [] };
+        }
+
+        const filtered = items.filter(isCartLineCompatibleWithCheckout);
+        if (filtered.length !== items.length) {
+          setCartMigrationNoticeFlag();
+        }
+        return { items: filtered };
+      },
     }
   )
 );
