@@ -81,6 +81,11 @@ const socialLinks: SocialLink[] = [
   },
 ];
 
+function isConfiguredSocialHref(href: string): boolean {
+  const h = href.trim();
+  return h.length > 0 && h !== '#';
+}
+
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
@@ -99,6 +104,7 @@ export default function ContactPage() {
   const footBranch = branches[0];
   const hoursAr = footBranch?.hoursAr ?? 'يومياً 11:00 ص - 2:00 ص';
   const hoursEn = footBranch?.hoursEn ?? 'Daily 11:00 AM - 2:00 AM';
+  const visibleSocialLinks = socialLinks.filter((l) => isConfiguredSocialHref(l.href));
 
   const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState({
@@ -361,37 +367,35 @@ export default function ContactPage() {
                 </CardContent>
               </Card>
 
-              {/* Social Media Card */}
-              <Card className="border-border/60 overflow-hidden">
-                <div className="h-1 bg-gradient-to-r from-gold via-pink-400 to-gold" />
-                <CardContent className="p-6 sm:p-8 space-y-5">
-                  <h3 className="text-lg font-bold text-foreground">
-                    {t(locale, 'socialMedia')}
-                  </h3>
+              {/* Social Media Card — only when links are configured (not "#") */}
+              {visibleSocialLinks.length > 0 ? (
+                <Card className="border-border/60 overflow-hidden">
+                  <div className="h-1 bg-gradient-to-r from-gold via-pink-400 to-gold" />
+                  <CardContent className="p-6 sm:p-8 space-y-5">
+                    <h3 className="text-lg font-bold text-foreground">
+                      {t(locale, 'socialMedia')}
+                    </h3>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    {socialLinks.map((link) => (
-                      <a
-                        key={link.name}
-                        href={link.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`
+                    <div className="grid grid-cols-2 gap-3">
+                      {visibleSocialLinks.map((link) => (
+                        <a
+                          key={link.name}
+                          href={link.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`
                           flex items-center gap-3 p-3 rounded-xl border border-border/40
                           ${link.hoverBg} transition-all duration-200 hover:border-border hover:shadow-sm
                         `}
-                      >
-                        <div className={link.color}>
-                          {link.icon}
-                        </div>
-                        <span className="text-sm font-medium text-foreground">
-                          {link.name}
-                        </span>
-                      </a>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                        >
+                          <div className={link.color}>{link.icon}</div>
+                          <span className="text-sm font-medium text-foreground">{link.name}</span>
+                        </a>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : null}
 
               {/* WhatsApp CTA */}
               <motion.a
