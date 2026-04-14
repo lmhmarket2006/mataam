@@ -27,13 +27,8 @@ import { useCart, useDelivery, useLanguage, useNavigation, type CartItem } from 
 import { t } from '@/lib/i18n';
 import DeliveryInfo from './DeliveryInfo';
 import { useRestaurantData } from '@/contexts/restaurant-data-context';
-
-type CheckoutDisplay = {
-  subtotalSar: number;
-  deliveryFeeSar: number;
-  totalSar: number;
-  lines: Array<{ nameSnapshot: string; quantity: number; lineTotalSar: number; optionLabels: string[] }>;
-};
+import type { CheckoutDisplayPayload } from '@/lib/checkout-types';
+import { buildCheckoutWhatsAppMessage } from '@/lib/checkout-whatsapp-message';
 
 export default function CartDrawer() {
   const {
@@ -82,149 +77,6 @@ export default function CartDrawer() {
     return hasName && hasPhone;
   })();
 
-  const formatWhatsAppMessage = useCallback(() => {
-    const optionLabelMap: Record<string, string> = {
-      quantity: 'اختيار الكمية/الحجم',
-      cookingMethod: 'طريقة الطبخ',
-      riceType: 'نوع الرز',
-      size: 'الحجم',
-      extras: 'الإضافات',
-      optionGroup: 'خيار',
-    };
-
-    const buildAddressLine = () => {
-      const details: string[] = [];
-      if (address.trim()) details.push(address.trim());
-      if (buildingNo.trim()) details.push(`مبنى ${buildingNo.trim()}`);
-      if (floorNo.trim()) details.push(`طابق ${floorNo.trim()}`);
-      if (apartmentNo.trim()) details.push(`شقة ${apartmentNo.trim()}`);
-      return details.join(' - ');
-    };
-
-    const lines: string[] = [];
-    lines.push('==============================');
-    lines.push('🍽️ *مطعم الواحة*');
-    lines.push('🧾 *طلب جديد عبر واتساب*');
-    lines.push('==============================');
-    lines.push('');
-    lines.push('👤 *بيانات العميل*');
-    lines.push(`- الاسم: ${customerName.trim() || 'غير محدد'}`);
-    lines.push(`- الجوال: ${customerPhone.trim() || 'غير محدد'}`);
-    lines.push('');
-    lines.push('📦 *تفاصيل الطلب*');
-    lines.push(`- نوع الطلب: ${orderType === 'delivery' ? '🚗 توصيل' : '🏪 استلام من الفرع'}`);
-    if (orderType === 'delivery') {
-      const addressLine = buildAddressLine();
-      if (addressLine) {
-        lines.push(`- العنوان: ${addressLine}`);
-      }
-      if (deliveryNotes.trim()) {
-        lines.push(`- ملاحظات التوصيل: ${deliveryNotes.trim()}`);
-      }
-    }
-    lines.push(`- طريقة الدفع: ${paymentMethod === 'cash' ? 'الدفع عند الاستلام' : 'الدفع الإلكتروني'}`);
-    lines.push('');
-    lines.push('🛒 *الأصناف*');
-    items.forEach((item, index) => {
-      lines.push(`${index + 1}) ${item.name}`);
-      lines.push(`   - الكمية: ${item.quantity}`);
-      if (item.options.length > 0) {
-        lines.push('   - الخيارات:');
-        item.options.forEach((option) => {
-          const optionLabel = optionLabelMap[option.type] ?? option.type;
-          lines.push(`     • ${optionLabel}: ${option.value}`);
-        });
-      }
-      if (item.notes.trim()) {
-        lines.push(`   - ملاحظات الصنف: ${item.notes.trim()}`);
-      }
-      lines.push(`   - إجمالي الصنف: ${item.totalPrice} ر.س`);
-      lines.push('');
-    });
-    lines.push('💰 *الملخص المالي*');
-    lines.push(`- المجموع الفرعي: ${subtotal} ر.س`);
-    lines.push(`- رسوم التوصيل: ${orderType === 'delivery' ? `${deliveryFee} ر.س` : '0 ر.س'}`);
-    lines.push(`- الإجمالي: ${total} ر.س`);
-    return lines.join('\n');
-  }, [
-    items,
-    total,
-    subtotal,
-    deliveryFee,
-    orderType,
-    customerName,
-    address,
-    buildingNo,
-    floorNo,
-    apartmentNo,
-    customerPhone,
-    deliveryNotes,
-    paymentMethod,
-    settings.nameAr,
-  ]);
-
-  const buildWhatsAppFromServer = useCallback(
-    (orderId: string, display: CheckoutDisplay) => {
-      const buildAddressLine = () => {
-        const details: string[] = [];
-        if (address.trim()) details.push(address.trim());
-        if (buildingNo.trim()) details.push(`مبنى ${buildingNo.trim()}`);
-        if (floorNo.trim()) details.push(`طابق ${floorNo.trim()}`);
-        if (apartmentNo.trim()) details.push(`شقة ${apartmentNo.trim()}`);
-        return details.join(' - ');
-      };
-
-      const lines: string[] = [];
-      lines.push('==============================');
-      lines�️ *${settings.nameAr}*`);
-      lines� *طلب جديد عبر واتساب*');
-      lines.push('==============================');
-      lines.push('');
-      lines.push(`�� *رقم الطلب:* ${orderId.slice(0, 8)}`);
-      lines.push('');
-     � *بيانات العميل*');
-      lines.push(`- الاسم: ${customerName.trim() || 'غير محدد'}`);
-      lines.push(`- الجوال: ${customerPhone.trim() || 'غير محدد'}`);
-      lines.push('');
-      lines.push('�� *تفاصيل الطلب*');
-      lines.push(`- نوع الطلب: ${orderType === '�� توص�� استلام من الفرع'}`);
-      if (orderType === 'delivery') {
-        const addressLine = buildAddressLine();
-        if (addressLine) lines.push(`- العنوان: ${addressLine}`);
-        if (deliveryNotes.trim()) lines.push(`- ملاحظات التوصيل: ${deliveryNotes.trim()}`);
-      }
-      lines.push(`- طريقة الدفع: ${paymentMethod === 'cash' ? 'الدفع عند الاستلام' : 'الدفع الإلكتروني'}`);
-      lines.push('');
-      lines.push('��� *الأصناف*');
-      display.lines.forEach((line, index) => {
-        lines.push(`${index + 1}) ${line.nameSnapshot}`);
-        lines.push(`   - الكمية: ${line.quantity}`);
-        if (line.optionLabels.length > 0) {
-          lines.push(`   - الإضافات: ${line.optionLabels.join('، ')}`);
-        }
-        lines.push(`   - إجمالي الصنف: ${line.lineTotalSar} ر.س`);
-        lines.push('');
-      });
-      lines.push('�� *الملخص المالي*');
-      lines.push(`- المجموع الفرعي: ${display.subtotalSar} ر.س`);
-      lines.push(`- رسوم التوصيل: ${orderType === 'delivery' ? `${display.deliveryFeeSar} ر.س` : '0 ر.س'}`);
-      lines.push(`- الإجمالي: ${display.totalSar} ر.س`);
-      return lines.join('\n');
-    },
-    [
-      settings.nameAr,
-      orderType,
-      customerName,
-      customerPhone,
-      address,
-      buildingNo,
-      floorNo,
-      apartmentNo,
-      deliveryNotes,
-      paymentMethod,
-    ]
-  );
-
   const handleWhatsAppCheckout = useCallback(async () => {
     setCheckoutErr(null);
     const lines = items.map((item) => ({
@@ -255,7 +107,7 @@ export default function CartDrawer() {
         }),
       });
       const data = (await res.json()) as
-        | { ok: true; orderId: string; display: CheckoutDisplay }
+        | { ok: true; orderId: string; display: CheckoutDisplayPayload }
         | { ok: false; error: string };
 
       if (!data.ok) {
@@ -274,12 +126,26 @@ export default function CartDrawer() {
       const envNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.trim() ?? '';
       const fromSettings = settings.whatsappNumber?.replace(/\D/g, '') ?? '';
       const safeNumber =
-        envNumber !== ''
-          ? envNumber.replace(/\D/g, '')
-          : fromSettings !== ''
- ? fromSettings
-            : '966500000000';
-      const message = buildWhatsAppFromServer(data.orderId, data.display);
+        envNumber !== '' ? envNumber.replace(/\D/g, '') : fromSettings !== '' ? fromSettings : '966500000000';
+
+      const addrParts: string[] = [];
+      if (address.trim()) addrParts.push(address.trim());
+      if (buildingNo.trim()) addrParts.push(`مبنى ${buildingNo.trim()}`);
+      if (floorNo.trim()) addrParts.push(`طابق ${floorNo.trim()}`);
+      if (apartmentNo.trim()) addrParts.push(`شقة ${apartmentNo.trim()}`);
+      const addressLine = addrParts.join(' - ');
+
+      const message = buildCheckoutWhatsAppMessage({
+        restaurantNameAr: settings.nameAr,
+        orderId: data.orderId,
+        customerName,
+        customerPhone,
+        orderType,
+        addressLine,
+        deliveryNotes,
+        paymentMethod,
+        display: data.display,
+      });
       const encodedMessage = encodeURIComponent(message);
       window.open(`https://wa.me/${safeNumber}?text=${encodedMessage}`, '_blank');
       clearCart();
@@ -302,7 +168,7 @@ export default function CartDrawer() {
     deliveryNotes,
     paymentMethod,
     settings.whatsappNumber,
-    buildWhatsAppFromServer,
+    settings.nameAr,
     clearCart,
     locale,
   ]);

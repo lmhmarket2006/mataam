@@ -177,7 +177,7 @@ export async function POST(req: Request) {
         }
       } else {
         const max = g.maxSelect ?? g.values.length;
-        const min = g.isRequired ? (g.minSelect ?? 1) : (g.minSelect ?? 0);
+        const min = g.minSelect ?? (g.isRequired ? 1 : 0);
         if (picked.length > max) {
           return NextResponse.json({ ok: false, error: 'invalid_options' }, { status: 400 });
         }

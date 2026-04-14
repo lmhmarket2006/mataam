@@ -38,7 +38,7 @@ function selectionValid(item: PublicMenuItem, sel: Record<string, Set<string>>):
       if (g.isRequired && picked.length === 0) return false;
     } else {
       const max = g.maxSelect ?? g.values.length;
-      const min = g.isRequired ? (g.minSelect ?? 1) : (g.minSelect ?? 0);
+      const min = g.minSelect ?? (g.isRequired ? 1 : 0);
       if (picked.length > max || picked.length < min) return false;
     }
   }
