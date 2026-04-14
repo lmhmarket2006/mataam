@@ -16,7 +16,8 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useLanguage, useNavigation } from '@/lib/store';
 import { t, type TranslationKey } from '@/lib/i18n';
-import { branches, type Branch } from '@/lib/menu-data';
+import { useRestaurantData } from '@/contexts/restaurant-data-context';
+import type { PublicBranch } from '@/lib/public-menu-types';
 
 /* ------------------------------------------------------------------ */
 /*  Animations                                                         */
@@ -33,7 +34,7 @@ const fadeUp = {
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
-function isBranchOpen(branch: Branch): boolean {
+function isBranchOpen(branch: PublicBranch): boolean {
   // All branches close between 1:00 AM - 2:00 AM
   const now = new Date();
   const hours = now.getHours();
@@ -47,7 +48,7 @@ function getGoogleMapsUrl(lat: number, lng: number): string {
 /* ------------------------------------------------------------------ */
 /*  Branch Card                                                        */
 /* ------------------------------------------------------------------ */
-function BranchCard({ branch, index }: { branch: Branch; index: number }) {
+function BranchCard({ branch, index }: { branch: PublicBranch; index: number }) {
   const { locale, isRTL } = useLanguage();
   const { navigate } = useNavigation();
   const isOpen = isBranchOpen(branch);
@@ -184,6 +185,7 @@ function BranchCard({ branch, index }: { branch: Branch; index: number }) {
 /* ------------------------------------------------------------------ */
 export default function BranchesPage() {
   const { locale, isRTL } = useLanguage();
+  const { branches } = useRestaurantData();
 
   return (
     <main className="min-h-screen" dir={isRTL ? 'rtl' : 'ltr'}>

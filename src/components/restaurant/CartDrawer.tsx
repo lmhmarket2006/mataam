@@ -26,6 +26,14 @@ import { Separator } from '@/components/ui/separator';
 import { useCart, useDelivery, useLanguage, useNavigation, type CartItem } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import DeliveryInfo from './DeliveryInfo';
+import { useRestaurantData } from '@/contexts/restaurant-data-context';
+
+type CheckoutDisplay = {
+  subtotalSar: number;
+  deliveryFeeSar: number;
+  totalSar: number;
+  lines: Array<{ nameSnapshot: string; quantity: number; lineTotalSar: number; optionLabels: string[] }>;
+};
 
 export default function CartDrawer() {
   const {
@@ -54,6 +62,9 @@ export default function CartDrawer() {
   } = useDelivery();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showDelivery, setShowDelivery] = useState(false);
+  const [checkoutBusy, setCheckoutBusy] = useState(false);
+  const [checkoutErr, setCheckoutErr] = useState<string | null>(null);
+  const { settings } = useRestaurantData();
 
   const subtotal = getTotal();
   const deliveryFee = getDeliveryFee(subtotal);
@@ -78,6 +89,7 @@ export default function CartDrawer() {
       riceType: 'نوع الرز',
       size: 'الحجم',
       extras: 'الإضافات',
+      optionGroup: 'خيار',
     };
 
     const buildAddressLine = () => {
@@ -134,17 +146,166 @@ export default function CartDrawer() {
     lines.push(`- رسوم التوصيل: ${orderType === 'delivery' ? `${deliveryFee} ر.س` : '0 ر.س'}`);
     lines.push(`- الإجمالي: ${total} ر.س`);
     return lines.join('\n');
-  }, [items, total, subtotal, deliveryFee, orderType, customerName, address, buildingNo, floorNo, apartmentNo, customerPhone, deliveryNotes, paymentMethod]);
+  }, [
+    items,
+    total,
+    subtotal,
+    deliveryFee,
+    orderType,
+    customerName,
+    address,
+    buildingNo,
+    floorNo,
+    apartmentNo,
+    customerPhone,
+    deliveryNotes,
+    paymentMethod,
+    settings.nameAr,
+  ]);
 
-  const handleWhatsAppCheckout = useCallback(() => {
-    const envNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.trim() ?? '';
-    const safeNumber = envNumber !== '' ? envNumber : '966500000000';
-    const whatsappNumber = safeNumber.replace(/[^\d]/g, '');
-    const message = formatWhatsAppMessage();
-    const encodedMessage = encodeURIComponent(message);
-    const url = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
-    window.open(url, '_blank');
-  }, [formatWhatsAppMessage]);
+  const buildWhatsAppFromServer = useCallback(
+    (orderId: string, display: CheckoutDisplay) => {
+      const buildAddressLine = () => {
+        const details: string[] = [];
+        if (address.trim()) details.push(address.trim());
+        if (buildingNo.trim()) details.push(`مبنى ${buildingNo.trim()}`);
+        if (floorNo.trim()) details.push(`طابق ${floorNo.trim()}`);
+        if (apartmentNo.trim()) details.push(`شقة ${apartmentNo.trim()}`);
+        return details.join(' - ');
+      };
+
+      const lines: string[] = [];
+      lines.push('==============================');
+      lines�️ *${settings.nameAr}*`);
+      lines� *طلب جديد عبر واتساب*');
+      lines.push('==============================');
+      lines.push('');
+      lines.push(`�� *رقم الطلب:* ${orderId.slice(0, 8)}`);
+      lines.push('');
+     � *بيانات العميل*');
+      lines.push(`- الاسم: ${customerName.trim() || 'غير محدد'}`);
+      lines.push(`- الجوال: ${customerPhone.trim() || 'غير محدد'}`);
+      lines.push('');
+      lines.push('�� *تفاصيل الطلب*');
+      lines.push(`- نوع الطلب: ${orderType === '�� توص�� استلام من الفرع'}`);
+      if (orderType === 'delivery') {
+        const addressLine = buildAddressLine();
+        if (addressLine) lines.push(`- العنوان: ${addressLine}`);
+        if (deliveryNotes.trim()) lines.push(`- ملاحظات التوصيل: ${deliveryNotes.trim()}`);
+      }
+      lines.push(`- طريقة الدفع: ${paymentMethod === 'cash' ? 'الدفع عند الاستلام' : 'الدفع الإلكتروني'}`);
+      lines.push('');
+      lines.push('��� *الأصناف*');
+      display.lines.forEach((line, index) => {
+        lines.push(`${index + 1}) ${line.nameSnapshot}`);
+        lines.push(`   - الكمية: ${line.quantity}`);
+        if (line.optionLabels.length > 0) {
+          lines.push(`   - الإضافات: ${line.optionLabels.join('، ')}`);
+        }
+        lines.push(`   - إجمالي الصنف: ${line.lineTotalSar} ر.س`);
+        lines.push('');
+      });
+      lines.push('�� *الملخص المالي*');
+      lines.push(`- المجموع الفرعي: ${display.subtotalSar} ر.س`);
+      lines.push(`- رسوم التوصيل: ${orderType === 'delivery' ? `${display.deliveryFeeSar} ر.س` : '0 ر.س'}`);
+      lines.push(`- الإجمالي: ${display.totalSar} ر.س`);
+      return lines.join('\n');
+    },
+    [
+      settings.nameAr,
+      orderType,
+      customerName,
+      customerPhone,
+      address,
+      buildingNo,
+      floorNo,
+      apartmentNo,
+      deliveryNotes,
+      paymentMethod,
+    ]
+  );
+
+  const handleWhatsAppCheckout = useCallback(async () => {
+    setCheckoutErr(null);
+    const lines = items.map((item) => ({
+      menuItemId: item.menuItemId,
+      quantity: item.quantity,
+      notes: item.notes,
+      optionValueIds: item.options
+        .filter((o) => o.type === 'optionGroup' && o.optionValueId)
+        .map((o) => o.optionValueId!),
+    }));
+
+    setCheckoutBusy(true);
+    try {
+      const res = await fetch('/api/orders/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerName,
+          customerPhone,
+          orderType,
+          address,
+          buildingNo,
+          floorNo,
+          apartmentNo,
+          deliveryNotes,
+          paymentMethod,
+          lines,
+        }),
+      });
+      const data = (await res.json()) as
+        | { ok: true; orderId: string; display: CheckoutDisplay }
+        | { ok: false; error: string };
+
+      if (!data.ok) {
+        const msg =
+          data.error === 'rate_limited'
+            ? locale === 'ar'
+              ? 'يرجى الانتظار دقيقة قبل إرسال طلب آخر من نفس الجوال.'
+              : 'Please wait a minute before placing another order with this phone.'
+            : locale === 'ar'
+              ? 'تعذر إتمام الطلب. تحقق من السلة وحاول مرة أخرى.'
+              : 'Could not place the order. Check your cart and try again.';
+        setCheckoutErr(msg);
+        return;
+      }
+
+      const envNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.trim() ?? '';
+      const fromSettings = settings.whatsappNumber?.replace(/\D/g, '') ?? '';
+      const safeNumber =
+        envNumber !== ''
+          ? envNumber.replace(/\D/g, '')
+          : fromSettings !== ''
+ ? fromSettings
+            : '966500000000';
+      const message = buildWhatsAppFromServer(data.orderId, data.display);
+      const encodedMessage = encodeURIComponent(message);
+      window.open(`https://wa.me/${safeNumber}?text=${encodedMessage}`, '_blank');
+      clearCart();
+    } catch {
+      setCheckoutErr(
+        locale === 'ar' ? 'حدث خطأ في الشبكة. حاول مرة أخرى.' : 'Network error. Try again.'
+      );
+    } finally {
+      setCheckoutBusy(false);
+    }
+  }, [
+    items,
+    customerName,
+    customerPhone,
+    orderType,
+    address,
+    buildingNo,
+    floorNo,
+    apartmentNo,
+    deliveryNotes,
+    paymentMethod,
+    settings.whatsappNumber,
+    buildWhatsAppFromServer,
+    clearCart,
+    locale,
+  ]);
 
   const handleClearCart = useCallback(() => {
     if (showClearConfirm) {
@@ -157,16 +318,20 @@ export default function CartDrawer() {
   }, [showClearConfirm, clearCart]);
 
   const getItemVariantLabel = useCallback((item: CartItem) => {
-    const variantOption = item.options.find(
-      (o) => o.type === 'riceType' || o.type === 'quantity'
-    );
+    const groupOpts = item.options.filter((o) => o.type === 'optionGroup');
+    if (groupOpts.length > 0) return groupOpts[0].value;
+    const variantOption = item.options.find((o) => o.type === 'riceType' || o.type === 'quantity');
     return variantOption?.value ?? '';
   }, []);
 
   const getItemExtrasText = useCallback((item: CartItem) => {
+    const groupOpts = item.options.filter((o) => o.type === 'optionGroup');
+    const tail = groupOpts.slice(1).map((o) => o.value);
     const extrasOptions = item.options.filter((o) => o.type === 'extras');
-    if (extrasOptions.length === 0) return '';
-    return extrasOptions.map((o) => o.value).join('، ');
+    const legacy = extrasOptions.map((o) => o.value);
+    const all = [...tail, ...legacy];
+    if (all.length === 0) return '';
+    return all.join('، ');
   }, []);
 
   // Render cart footer (price + checkout button) — always sticky
@@ -201,14 +366,17 @@ export default function CartDrawer() {
           <span className="text-xl font-bold text-primary tabular-nums">{total} {t(locale, 'sar')}</span>
         </div>
       </div>
+      {checkoutErr ? (
+        <p className="text-xs text-destructive px-1">{checkoutErr}</p>
+      ) : null}
       <Button
-        onClick={handleWhatsAppCheckout}
-        disabled={!isDeliveryValid}
+        onClick={() => void handleWhatsAppCheckout()}
+        disabled={!isDeliveryValid || checkoutBusy}
         className="w-full h-12 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] disabled:bg-muted disabled:text-muted-foreground text-white text-sm font-bold shadow-lg shadow-[#25D366]/20 transition-all"
         size="lg"
       >
         <MessageCircle className="w-5 h-5" />
-        {t(locale, 'checkoutWhatsApp')}
+        {checkoutBusy ? (locale === 'ar' ? 'جاري الإرسال...' : 'Sending...') : t(locale, 'checkoutWhatsApp')}
       </Button>
     </SheetFooter>
   );

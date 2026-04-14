@@ -13,6 +13,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { useLanguage, useNavigation, type Page } from '@/lib/store';
 import { t, type TranslationKey } from '@/lib/i18n';
+import { useRestaurantData } from '@/contexts/restaurant-data-context';
 
 interface FooterLinkItem {
   page: Page;
@@ -68,6 +69,19 @@ const socialLinks: SocialLink[] = [
 export default function Footer() {
   const { locale, isRTL } = useLanguage();
   const { navigate } = useNavigation();
+  const { settings, branches } = useRestaurantData();
+  const phoneDigits = (settings.whatsappNumber?.trim() || '966548599988').replace(/\D/g, '');
+  const waUrl = `https://wa.me/${phoneDigits}`;
+  const telUrl = `tel:+${phoneDigits}`;
+  const displayPhone =
+    phoneDigits.length === 12
+      ? `+${phoneDigits.slice(0, 3)} ${phoneDigits.slice(3, 5)} ${phoneDigits.slice(5, 8)} ${phoneDigits.slice(8)}`
+      : `+${phoneDigits}`;
+  const addrAr = settings.defaultPickupAddressAr ?? 'الرياض - طريق الملك فهد، حي العليا';
+  const addrEn = settings.defaultPickupAddressEn ?? 'Riyadh - King Fahd Road, Olaya District';
+  const footBranch = branches[0];
+  const hoursAr = footBranch?.hoursAr ?? 'يومياً 11:00 ص - 2:00 ص';
+  const hoursEn = footBranch?.hoursEn ?? 'Daily 11:00 AM - 2:00 AM';
 
   return (
     <footer className="mt-auto bg-primary text-primary-foreground pb-[env(safe-area-inset-bottom)]">
@@ -96,7 +110,7 @@ export default function Footer() {
               </div>
               <div className="flex flex-col">
                 <span className="text-lg font-bold leading-tight tracking-wide">
-                  {locale === 'ar' ? 'الواحة' : 'Al Wahah'}
+                  {locale === 'ar' ? settings.nameAr : settings.nameEn}
                 </span>
                 <span className="text-[9px] text-primary-foreground/60 font-medium tracking-wider uppercase leading-none">
                   {locale === 'ar' ? 'مطعم' : 'Restaurant'}
@@ -149,12 +163,12 @@ export default function Footer() {
               {/* Phone */}
               <li>
                 <a
-                  href="tel:+966548599988"
+                  href={telUrl}
                   className="flex items-start gap-2.5 text-primary-foreground/70 text-sm hover:text-gold transition-colors duration-200 group"
                 >
                   <Phone className="size-4 mt-0.5 text-gold/60 group-hover:text-gold transition-colors" />
                   <div dir="ltr" className="text-start">
-                    +966 548 599 988
+                    {displayPhone}
                   </div>
                 </a>
               </li>
@@ -163,11 +177,7 @@ export default function Footer() {
               <li>
                 <div className="flex items-start gap-2.5 text-primary-foreground/70 text-sm">
                   <MapPin className="size-4 mt-0.5 text-gold/60 shrink-0" />
-                  <span>
-                    {locale === 'ar'
-                      ? 'الرياض - طريق الملك فهد، حي العليا'
-                      : 'Riyadh - King Fahd Road, Olaya District'}
-                  </span>
+                  <span>{locale === 'ar' ? addrAr : addrEn}</span>
                 </div>
               </li>
 
@@ -175,11 +185,7 @@ export default function Footer() {
               <li>
                 <div className="flex items-start gap-2.5 text-primary-foreground/70 text-sm">
                   <Clock className="size-4 mt-0.5 text-gold/60 shrink-0" />
-                  <span>
-                    {locale === 'ar'
-                      ? 'يومياً 11:00 ص - 2:00 ص'
-                      : 'Daily 11:00 AM - 2:00 AM'}
-                  </span>
+                  <span>{locale === 'ar' ? hoursAr : hoursEn}</span>
                 </div>
               </li>
             </ul>
@@ -217,7 +223,7 @@ export default function Footer() {
 
             {/* WhatsApp order CTA */}
             <motion.a
-              href="https://wa.me/966548599988"
+              href={waUrl}
               target="_blank"
               rel="noopener noreferrer"
               whileHover={{ scale: 1.03 }}

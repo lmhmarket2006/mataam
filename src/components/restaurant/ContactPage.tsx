@@ -21,6 +21,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useLanguage } from '@/lib/store';
 import { t, type TranslationKey } from '@/lib/i18n';
+import { useRestaurantData } from '@/contexts/restaurant-data-context';
 
 /* ------------------------------------------------------------------ */
 /*  Animations                                                         */
@@ -85,6 +86,20 @@ const socialLinks: SocialLink[] = [
 /* ------------------------------------------------------------------ */
 export default function ContactPage() {
   const { locale, isRTL } = useLanguage();
+  const { settings, branches } = useRestaurantData();
+  const phoneDigits = (settings.whatsappNumber?.trim() || '966548599988').replace(/\D/g, '');
+  const waUrl = `https://wa.me/${phoneDigits}`;
+  const telUrl = `tel:+${phoneDigits}`;
+  const displayPhone =
+    phoneDigits.length === 12
+      ? `+${phoneDigits.slice(0, 3)} ${phoneDigits.slice(3, 5)} ${phoneDigits.slice(5, 8)} ${phoneDigits.slice(8)}`
+      : `+${phoneDigits}`;
+  const addrAr = settings.defaultPickupAddressAr ?? 'طريق الملك فهد، حي العليا، الرياض';
+  const addrEn = settings.defaultPickupAddressEn ?? 'King Fahd Road, Olaya District, Riyadh';
+  const footBranch = branches[0];
+  const hoursAr = footBranch?.hoursAr ?? 'يومياً 11:00 ص - 2:00 ص';
+  const hoursEn = footBranch?.hoursEn ?? 'Daily 11:00 AM - 2:00 AM';
+
   const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -297,7 +312,7 @@ export default function ContactPage() {
                   <div className="space-y-4">
                     {/* Phone */}
                     <a
-                      href="tel:+966548599988"
+                      href={telUrl}
                       className="flex items-start gap-3.5 p-3 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-950/20 transition-colors group"
                     >
                       <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center shrink-0 group-hover:bg-blue-100 dark:group-hover:bg-blue-950/50 transition-colors">
@@ -308,7 +323,7 @@ export default function ContactPage() {
                           {t(locale, 'contactPhone')}
                         </p>
                         <p className="text-sm font-semibold text-foreground text-start" dir="ltr">
-                          +966 548 599 988
+                          {displayPhone}
                         </p>
                       </div>
                     </a>
@@ -323,9 +338,7 @@ export default function ContactPage() {
                           {t(locale, 'contactAddress')}
                         </p>
                         <p className="text-sm text-foreground leading-relaxed">
-                          {locale === 'ar'
-                            ? 'طريق الملك فهد، حي العليا، الرياض'
-                            : 'King Fahd Road, Olaya District, Riyadh'}
+                          {locale === 'ar' ? addrAr : addrEn}
                         </p>
                       </div>
                     </div>
@@ -340,7 +353,7 @@ export default function ContactPage() {
                           {t(locale, 'contactHours')}
                         </p>
                         <p className="text-sm text-foreground">
-                          {locale === 'ar' ? 'يومياً 11:00 ص - 2:00 ص' : 'Daily 11:00 AM - 2:00 AM'}
+                          {locale === 'ar' ? hoursAr : hoursEn}
                         </p>
                       </div>
                     </div>
@@ -382,7 +395,7 @@ export default function ContactPage() {
 
               {/* WhatsApp CTA */}
               <motion.a
-                href="https://wa.me/966548599988"
+                href={waUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 whileHover={{ scale: 1.02 }}
@@ -417,7 +430,9 @@ export default function ContactPage() {
 
                   {/* Arrow indicator */}
                   <div className="mt-4 flex items-center gap-2 text-white/70 text-sm">
-                    <span dir="ltr" className="text-start">wa.me/966548599988</span>
+                    <span dir="ltr" className="text-start">
+                      wa.me/{phoneDigits}
+                    </span>
                   </div>
                 </div>
               </motion.a>
