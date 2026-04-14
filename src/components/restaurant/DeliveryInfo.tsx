@@ -24,7 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { useDelivery, useLanguage, DELIVERY_FEE, FREE_DELIVERY_MIN, type OrderType } from '@/lib/store';
+import { useDelivery, useLanguage, type OrderType } from '@/lib/store';
 import { t } from '@/lib/i18n';
 
 interface DeliveryInfoProps {
@@ -53,6 +53,7 @@ export default function DeliveryInfo({ subtotal }: DeliveryInfoProps) {
     setDeliveryNotes,
     setPaymentMethod,
     getDeliveryFee,
+    freeDeliveryMinSar,
   } = useDelivery();
 
   const deliveryFee = getDeliveryFee(subtotal);
@@ -350,7 +351,7 @@ export default function DeliveryInfo({ subtotal }: DeliveryInfoProps) {
                   <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-muted-foreground">
                     <Info className="size-3" />
                     <span>
-                      {t(locale, 'freeDeliveryAbove')} {FREE_DELIVERY_MIN} {t(locale, 'sar')}
+                      {t(locale, 'freeDeliveryAbove')} {freeDeliveryMinSar} {t(locale, 'sar')}
                     </span>
                   </div>
                 )}
