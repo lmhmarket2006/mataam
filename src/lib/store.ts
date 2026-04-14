@@ -102,6 +102,8 @@ export const useDelivery = create<DeliveryState>()(
   persist(
     (set, get) => ({
       ...initialDeliveryState,
+      deliveryFeeSar: DELIVERY_FEE,
+      freeDeliveryMinSar: FREE_DELIVERY_MIN,
       setOrderType: (type) => set({ orderType: type }),
       setCustomerName: (name) => set({ customerName: name }),
       setAddress: (address) => set({ address }),
@@ -111,13 +113,20 @@ export const useDelivery = create<DeliveryState>()(
       setCustomerPhone: (phone) => set({ customerPhone: phone }),
       setDeliveryNotes: (notes) => set({ deliveryNotes: notes }),
       setPaymentMethod: (method) => set({ paymentMethod: method }),
+      hydratePricing: (deliveryFeeSar, freeDeliveryMinSar) =>
+        set({ deliveryFeeSar, freeDeliveryMinSar }),
       getDeliveryFee: (subtotal) => {
-        const { orderType } = get();
+        const { orderType, freeDeliveryMinSar, deliveryFeeSar } = get();
         if (orderType === 'pickup') return 0;
-        if (subtotal >= FREE_DELIVERY_MIN) return 0;
-        return DELIVERY_FEE;
+        if (subtotal >= freeDeliveryMinSar) return 0;
+        return deliveryFeeSar;
       },
-      resetDelivery: () => set(initialDeliveryState),
+      resetDelivery: () =>
+        set({
+          ...initialDeliveryState,
+          deliveryFeeSar: get().deliveryFeeSar,
+          freeDeliveryMinSar: get().freeDeliveryMinSar,
+        }),
     }),
     {
       name: 'restaurant-delivery',
