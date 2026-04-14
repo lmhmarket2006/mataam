@@ -245,11 +245,25 @@ export default function BranchesPage() {
       {/* ============================================================ */}
       <section className="py-16 sm:py-20 lg:py-28 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-            {branches.map((branch, i) => (
-              <BranchCard key={branch.id} branch={branch} index={i} />
-            ))}
-          </div>
+          {branches.length === 0 ? (
+            <div className="text-center py-16 sm:py-20 rounded-2xl border border-dashed border-border/70 bg-muted/20">
+              <MapPin className="size-10 text-muted-foreground mx-auto mb-4 opacity-60" />
+              <p className="text-lg font-semibold text-foreground">
+                {locale === 'ar' ? 'لا توجد فروع متاحة حالياً.' : 'No branches available.'}
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
+                {locale === 'ar'
+                  ? 'نعتذر، لم يتم نشر أي فروع بعد. يرجى التواصل مع المطعم.'
+                  : 'No branch listings yet. Please contact the restaurant.'}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+              {branches.map((branch, i) => (
+                <BranchCard key={branch.id} branch={branch} index={i} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -258,6 +272,8 @@ export default function BranchesPage() {
       {/* ============================================================ */}
       <section className="py-16 sm:py-20 bg-gradient-to-b from-amber-50/60 to-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {branches.length === 0 ? null : (
+            <>
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -309,6 +325,8 @@ export default function BranchesPage() {
               );
             })}
           </div>
+            </>
+          )}
         </div>
       </section>
     </main>

@@ -363,6 +363,11 @@ export default function MenuPage() {
     }
   }, [menuCategories, activeCategory, defaultCatId]);
 
+  const isMenuEmpty = useMemo(
+    () => menuCategories.length === 0 || menuCategories.every((c) => c.items.length === 0),
+    [menuCategories]
+  );
+
   // Filter items by search
   const filteredItems = useMemo(() => {
     if (!searchQuery.trim()) return menuCategories.flatMap((c) => c.items);
@@ -375,7 +380,7 @@ export default function MenuPage() {
           item.nameAr.toLowerCase().includes(query) ||
           item.nameEn.toLowerCase().includes(query)
       );
-  }, [searchQuery]);
+  }, [menuCategories, searchQuery]);
 
   // Check if we have any results
   const hasResults = filteredItems.length > 0;
@@ -444,16 +449,37 @@ export default function MenuPage() {
       </section>
 
       {/* Category Navigation (Sticky) */}
-      <CategoryNav
-        activeCategory={effectiveActiveCategory}
-        onSelectCategory={setActiveCategory}
-        categories={menuCategories}
-      />
+      {!isMenuEmpty ? (
+        <CategoryNav
+          activeCategory={effectiveActiveCategory}
+          onSelectCategory={setActiveCategory}
+          categories={menuCategories}
+        />
+      ) : null}
 
       {/* Menu Content */}
       <section className="py-6 sm:py-12 lg:py-16">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-          {hasResults ? (
+          {isMenuEmpty ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4 }}
+              className="text-center py-20"
+            >
+              <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-5">
+                <Sparkles className="size-7 text-muted-foreground" />
+              </div>
+              <p className="text-lg font-semibold text-foreground">
+                {locale === 'ar' ? 'القائمة غير متاحة حالياً.' : 'The menu is empty for now.'}
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {locale === 'ar'
+                  ? 'لم تُضف أصناف أو تصنيفات بعد. عد لاحقاً.'
+                  : 'No categories or items have been added yet. Check back soon.'}
+              </p>
+            </motion.div>
+          ) : hasResults ? (
             <div className="space-y-10 sm:space-y-16 lg:space-y-20">
               {categoriesWithItems.map((cat) => (
                 <CategorySection
