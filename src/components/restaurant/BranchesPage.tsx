@@ -82,20 +82,25 @@ function BranchCard({ branch, index }: { branch: PublicBranch; index: number }) 
                 <span className="text-sm font-medium">{city}</span>
               </div>
             </div>
-            <Badge
-              className={`shrink-0 text-[11px] font-semibold px-2.5 py-0.5 border-0 ${
-                isOpen
-                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400'
-                  : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400'
-              }`}
-            >
-              <span
-                className={`inline-block w-1.5 h-1.5 rounded-full me-1.5 ${
-                  isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'
+            <div className="flex flex-col items-end gap-0.5 shrink-0 max-w-[8.5rem]">
+              <Badge
+                className={`text-[11px] font-semibold px-2.5 py-0.5 border-0 ${
+                  isOpen
+                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400'
+                    : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400'
                 }`}
-              />
-              {isOpen ? t(locale, 'branchOpen') : t(locale, 'branchClosed')}
-            </Badge>
+              >
+                <span
+                  className={`inline-block w-1.5 h-1.5 rounded-full me-1.5 ${
+                    isOpen ? 'bg-emerald-500' : 'bg-red-500'
+                  }`}
+                />
+                {isOpen ? t(locale, 'branchOpen') : t(locale, 'branchClosed')}
+              </Badge>
+              <span className="text-[10px] text-muted-foreground text-end leading-tight">
+                {locale === 'ar' ? 'تقريبي — ليس من جدول الفرع' : 'Approx. — not from branch hours'}
+              </span>
+            </div>
           </div>
 
           <Separator className="bg-border/40" />

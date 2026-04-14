@@ -4,10 +4,13 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
+const prismaLog =
+  process.env.NODE_ENV === 'production' ? (['warn', 'error'] as const) : (['query'] as const);
+
 export const db =
   globalForPrisma.prisma ??
   new PrismaClient({
-    log: ['query'],
+    log: [...prismaLog],
   })
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = db

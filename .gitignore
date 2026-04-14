@@ -24,6 +24,10 @@ node_modules
 .DS_Store
 *.pem
 
+# SQLite database files (never commit real customer/order data)
+*.db
+*.db-journal
+
 # debug
 npm-debug.log*
 yarn-debug.log*

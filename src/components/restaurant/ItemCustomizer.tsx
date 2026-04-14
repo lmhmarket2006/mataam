@@ -315,6 +315,7 @@ export default function ItemCustomizer() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder={t(locale, 'notesPlaceholder')}
+                  maxLength={500}
                   className="min-h-[72px] resize-none rounded-xl border-2 border-border bg-card text-sm focus:border-primary/50 transition-colors"
                   dir={isRTL ? 'rtl' : 'ltr'}
                 />

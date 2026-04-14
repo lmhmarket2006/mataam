@@ -48,6 +48,36 @@ function checkoutApiErrorMessage(error: string, locale: 'ar' | 'en'): string {
       ? 'خيارات غير صالحة. افتح الصنف وأعد اختيار الإضافات.\nInvalid options. Open the item and select your choices again.'
       : 'Invalid options. Open the item and select your choices again.\nخيارات غير صالحة. افتح الصنف وأعد اختيار الإضافات.';
   }
+  if (error === 'invalid_customer') {
+    return locale === 'ar'
+      ? 'يرجى إدخال الاسم (حرفان على الأقل) ورقم جوال صحيح.\nPlease enter your name (at least 2 characters) and a valid phone number.'
+      : 'Please enter your name (at least 2 characters) and a valid phone number.\nيرجى إدخال الاسم (حرفان على الأقل) ورقم جوال صحيح.';
+  }
+  if (error === 'invalid_address') {
+    return locale === 'ar'
+      ? 'للتوصيل يرجى إدخال عنوان أوضح (3 أحرف على الأقل).\nFor delivery, please enter a clearer address (at least 3 characters).'
+      : 'For delivery, please enter a clearer address (at least 3 characters).\nللتوصيل يرجى إدخال عنوان أوضح (3 أحرف على الأقل).';
+  }
+  if (error === 'invalid_order_type') {
+    return locale === 'ar'
+      ? 'نوع الطلب غير صالح. أعد فتح السلة وحاول مرة أخرى.\nInvalid order type. Reopen the cart and try again.'
+      : 'Invalid order type. Reopen the cart and try again.\nنوع الطلب غير صالح. أعد فتح السلة وحاول مرة أخرى.';
+  }
+  if (error === 'invalid_payment') {
+    return locale === 'ar'
+      ? 'طريقة الدفع غير صالحة. اختر نقدًا أو دفعًا إلكترونيًا من قسم التوصيل.\nInvalid payment method. Choose cash or online in the delivery section.'
+      : 'Invalid payment method. Choose cash or online in the delivery section.\nطريقة الدفع غير صالحة. اختر نقدًا أو دفعًا إلكترونيًا من قسم التوصيل.';
+  }
+  if (error === 'invalid_lines') {
+    return locale === 'ar'
+      ? 'السلة غير صالحة. أضف أصنافًا أو حدّث الصفحة.\nYour cart is invalid. Add items or refresh the page.'
+      : 'Your cart is invalid. Add items or refresh the page.\nالسلة غير صالحة. أضف أصنافًا أو حدّث الصفحة.';
+  }
+  if (error === 'invalid_quantity') {
+    return locale === 'ar'
+      ? 'كمية غير صالحة (1–10 لكل صنف). راجع الكميات في السلة.\nInvalid quantity (1–10 per item). Check quantities in your cart.'
+      : 'Invalid quantity (1–10 per item). Check quantities in your cart.\nكمية غير صالحة (1–10 لكل صنف). راجع الكميات في السلة.';
+  }
   return locale === 'ar'
     ? 'تعذر إتمام الطلب. تحقق من السلة وحاول مرة أخرى.\nCould not place the order. Check your cart and try again.'
     : 'Could not place the order. Check your cart and try again.\nتعذر إتمام الطلب. تحقق من السلة وحاول مرة أخرى.';
