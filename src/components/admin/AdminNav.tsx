@@ -9,6 +9,9 @@ const links = [
   { href: '/admin', label: 'لوحة التحكم' },
   { href: '/admin/categories', label: 'التصنيفات' },
   { href: '/admin/menu', label: 'المنيو' },
+  { href: '/admin/branches', label: 'الفروع' },
+  { href: '/admin/settings', label: 'الإعدادات' },
+  { href: '/admin/orders', label: 'الطلبات' },
 ];
 
 export default function AdminNav({ email }: { email: string }) {

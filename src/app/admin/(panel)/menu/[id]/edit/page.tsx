@@ -41,9 +41,14 @@ export default async function EditMenuItemPage({
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <h1 className="text-2xl font-bold">تعديل صنف</h1>
-        <Button variant="outline" asChild>
-          <Link href="/admin/menu">رجوع</Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="secondary" asChild>
+            <Link href={`/admin/menu/${item.id}/options`}>Manage options / الإضافات</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href="/admin/menu">رجوع</Link>
+          </Button>
+        </div>
       </div>
       {err ? <p className="text-sm text-destructive">{err}</p> : null}
       <Card>

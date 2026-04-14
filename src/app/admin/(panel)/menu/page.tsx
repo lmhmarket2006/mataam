@@ -37,6 +37,7 @@ export default async function AdminMenuPage() {
                 <th className="py-2 pe-3">التصنيف</th>
                 <th className="py-2 pe-3">السعر</th>
                 <th className="py-2 pe-3">متاح</th>
+                <th className="py-2 pe-3">الإضافات</th>
                 <th className="py-2">إجراءات</th>
               </tr>
             </thead>
@@ -55,6 +56,11 @@ export default async function AdminMenuPage() {
                     <span className="text-muted-foreground text-xs">ر.س</span>
                   </td>
                   <td className="py-3 pe-3">{item.available ? 'نعم' : 'لا'}</td>
+                  <td className="py-3 pe-3">
+                    <Button size="sm" variant="outline" asChild>
+                      <Link href={`/admin/menu/${item.id}/options`}>الإضافات</Link>
+                    </Button>
+                  </td>
                   <td className="py-3">
                     <div className="flex flex-wrap gap-2">
                       <Button size="sm" variant="secondary" asChild>
