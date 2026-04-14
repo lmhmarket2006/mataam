@@ -18,7 +18,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useNavigation, useLanguage, useCart } from '@/lib/store';
 import { t, type TranslationKey } from '@/lib/i18n';
-import { popularItems, branches, reviews, type MenuItem } from '@/lib/menu-data';
+import { reviews } from '@/lib/menu-data';
+import { useRestaurantData } from '@/contexts/restaurant-data-context';
+import type { PublicMenuItem } from '@/lib/public-menu-types';
 
 // ==============================
 // ANIMATION VARIANTS
@@ -99,6 +101,8 @@ function SectionHeading({
 function HeroSection() {
   const { locale } = useLanguage();
   const { navigate } = useNavigation();
+  const { branches } = useRestaurantData();
+  const branchCountLabel = branches.length > 0 ? `+${branches.length}` : '+0';
 
   return (
     <section className="relative min-h-[70vh] sm:min-h-[80vh] flex items-center overflow-hidden -mt-16 sm:-mt-[72px] pt-[calc(4rem+env(safe-area-inset-top))] sm:pt-[calc(4.5rem+env(safe-area-inset-top))]">
@@ -181,7 +185,7 @@ function HeroSection() {
             className="mt-12 flex items-center gap-8 sm:gap-12"
           >
             {[
-              { value: '+4', label: locale === 'ar' ? 'فروع' : 'Branches' },
+              { value: branchCountLabel, label: locale === 'ar' ? 'فروع' : 'Branches' },
               { value: '4.9', label: locale === 'ar' ? 'تقييم' : 'Rating' },
               { value: '+10K', label: locale === 'ar' ? 'عميل سعيد' : 'Happy Clients' },
             ].map((stat) => (
@@ -207,6 +211,7 @@ function PopularDishesSection() {
   const { locale } = useLanguage();
   const { openCustomizer } = useCart();
   const { navigate } = useNavigation();
+  const { popularItems } = useRestaurantData();
 
   return (
     <section className="py-12 sm:py-16 lg:py-24">
@@ -255,7 +260,7 @@ function PopularItemCard({
   index,
   onAdd,
 }: {
-  item: MenuItem;
+  item: PublicMenuItem;
   index: number;
   onAdd: (id: string) => void;
 }) {
@@ -503,6 +508,7 @@ function OffersSection() {
 function BranchesPreviewSection() {
   const { locale } = useLanguage();
   const { navigate } = useNavigation();
+  const { branches } = useRestaurantData();
 
   const previewBranches = branches.slice(0, 2);
 

@@ -15,7 +15,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useNavigation, useLanguage, useCart } from '@/lib/store';
 import { t } from '@/lib/i18n';
-import { menuCategories, type MenuItem, type MenuCategory } from '@/lib/menu-data';
+import { useRestaurantData } from '@/contexts/restaurant-data-context';
+import type { PublicMenuItem, PublicMenuCategory } from '@/lib/public-menu-types';
 
 // ==============================
 // ANIMATION VARIANTS
@@ -48,16 +49,14 @@ const scaleIn = {
 // ==============================
 // MENU ITEM CARD (Mobile-first)
 // ==============================
-function MenuItemCard({ item, index }: { item: MenuItem; index: number }) {
+function MenuItemCard({ item, index }: { item: PublicMenuItem; index: number }) {
   const { locale } = useLanguage();
   const { openCustomizer } = useCart();
 
   const name = locale === 'ar' ? item.nameAr : item.nameEn;
   const desc = locale === 'ar' ? item.descAr : item.descEn;
-  const hasPriceVariants = item.options?.priceVariants && item.options.priceVariants.length > 0;
-  const lowestPrice = hasPriceVariants
-    ? Math.min(...item.options!.priceVariants!.map((v) => v.price))
-    : item.price;
+  const hasPriceVariants = item.optionGroups.length > 0;
+  const lowestPrice = item.price;
 
   return (
     <motion.div
@@ -179,8 +178,8 @@ function CategorySection({
   category,
   filteredItems,
 }: {
-  category: MenuCategory;
-  filteredItems: MenuItem[];
+  category: PublicMenuCategory;
+  filteredItems: PublicMenuItem[];
 }) {
   const { locale } = useLanguage();
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -350,9 +349,17 @@ function CategoryNav({
 // MAIN MENU PAGE
 // ==============================
 export default function MenuPage() {
+  const { menuCategories } = useRestaurantData();
   const { locale } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState('cat_chicken');
+  const defaultCatId = menuCategories[0]?.id ?? '';
+  const [activeCategory, setActiveCategory] = useState(defaultCatId);
+
+  useEffect(() => {
+    if (defaultCatId && !menuCategories.some((c) => c.id === activeCategory)) {
+      setActiveCategory(defaultCatId);
+    }
+  }, [menuCategories, activeCategory, defaultCatId]);
 
   // Filter items by search
   const filteredItems = useMemo(() => {
