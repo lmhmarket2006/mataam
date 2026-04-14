@@ -19,6 +19,26 @@ function sarFromHalalas(h: number): number {
   return Math.round(halalasToSar(h) * 100) / 100;
 }
 
+function getMinimalFallbackPayload(): PublicRestaurantPayload {
+  return {
+    settings: {
+      nameAr: 'مطعم',
+      nameEn: 'Restaurant',
+      logo: null,
+      whatsappNumber: null,
+      currency: 'SAR',
+      defaultPickupAddressAr: null,
+      defaultPickupAddressEn: null,
+      deliveryFeeSar: 10,
+      freeDeliveryMinSar: 100,
+    },
+    branches: [],
+    menuCategories: [],
+    allMenuItems: [],
+    popularItems: [],
+  };
+}
+
 function mapSettings(row: {
   nameAr: string;
   nameEn: string;
@@ -44,6 +64,15 @@ function mapSettings(row: {
 }
 
 export async function getPublicRestaurantPayload(): Promise<PublicRestaurantPayload> {
+  try {
+    return await loadPublicRestaurantPayload();
+  } catch (e) {
+    console.error('[getPublicRestaurantPayload]', e);
+    return getMinimalFallbackPayload();
+  }
+}
+
+async function loadPublicRestaurantPayload(): Promise<PublicRestaurantPayload> {
   const [settingsRow, branchRows, categoryRows] = await Promise.all([
     db.restaurantSettings.findUnique({ where: { id: 'default' } }),
     db.branch.findMany({
