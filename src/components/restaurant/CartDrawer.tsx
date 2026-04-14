@@ -32,6 +32,27 @@ import { useRestaurantData } from '@/contexts/restaurant-data-context';
 import type { CheckoutDisplayPayload } from '@/lib/checkout-types';
 import { buildCheckoutWhatsAppMessage } from '@/lib/checkout-whatsapp-message';
 
+function checkoutApiErrorMessage(error: string, locale: 'ar' | 'en'): string {
+  if (error === 'rate_limited') {
+    return locale === 'ar'
+      ? 'يرجى الانتظار دقيقة قبل إرسال طلب آخر من نفس الجوال.\nPlease wait a minute before placing another order with this phone.'
+      : 'Please wait a minute before placing another order with this phone.\nيرجى الانتظار دقيقة قبل إرسال طلب آخر من نفس الجوال.';
+  }
+  if (error === 'invalid_item') {
+    return locale === 'ar'
+      ? 'أحد الأصناف لم يعد متوفرًا. أزل الصنف من السلة أو حدّث القائمة.\nAn item is no longer available. Remove it from your cart or refresh the menu.'
+      : 'An item is no longer available. Remove it from your cart or refresh the menu.\nأحد الأصناف لم يعد متوفرًا. أزل الصنف من السلة أو حدّث القائمة.';
+  }
+  if (error === 'invalid_options') {
+    return locale === 'ar'
+      ? 'خيارات غير صالحة. افتح الصنف وأعد اختيار الإضافات.\nInvalid options. Open the item and select your choices again.'
+      : 'Invalid options. Open the item and select your choices again.\nخيارات غير صالحة. افتح الصنف وأعد اختيار الإضافات.';
+  }
+  return locale === 'ar'
+    ? 'تعذر إتمام الطلب. تحقق من السلة وحاول مرة أخرى.\nCould not place the order. Check your cart and try again.'
+    : 'Could not place the order. Check your cart and try again.\nتعذر إتمام الطلب. تحقق من السلة وحاول مرة أخرى.';
+}
+
 export default function CartDrawer() {
   const {
     items,
@@ -61,6 +82,8 @@ export default function CartDrawer() {
   const [showDelivery, setShowDelivery] = useState(false);
   const [checkoutBusy, setCheckoutBusy] = useState(false);
   const [checkoutErr, setCheckoutErr] = useState<string | null>(null);
+  const [waFallback, setWaFallback] = useState<{ url: string; plainMessage: string } | null>(null);
+  const [copyDone, setCopyDone] = useState(false);
   const { settings } = useRestaurantData();
 
   const subtotal = getTotal();
@@ -81,6 +104,8 @@ export default function CartDrawer() {
 
   const handleWhatsAppCheckout = useCallback(async () => {
     setCheckoutErr(null);
+    setWaFallback(null);
+    setCopyDone(false);
     const lines = items.map((item) => ({
       menuItemId: item.menuItemId,
       quantity: item.quantity,
@@ -108,20 +133,25 @@ export default function CartDrawer() {
           lines,
         }),
       });
-      const data = (await res.json()) as
+      const rawText = await res.text();
+      let data: unknown;
+      try {
+        data = rawText ? JSON.parse(rawText) : {};
+      } catch {
+        setCheckoutErr(
+          locale === 'ar'
+            ? 'استجابة غير صالحة من الخادم. حاول مرة أخرى.\nInvalid server response. Please try again.'
+            : 'Invalid server response. Please try again.\nاستجابة غير صالحة من الخادم. حاول مرة أخرى.'
+        );
+        return;
+      }
+      const payload = data as
         | { ok: true; orderId: string; display: CheckoutDisplayPayload }
-        | { ok: false; error: string };
+        | { ok: false; error?: string };
 
-      if (!data.ok) {
-        const msg =
-          data.error === 'rate_limited'
-            ? locale === 'ar'
-              ? 'يرجى الانتظار دقيقة قبل إرسال طلب آخر من نفس الجوال.'
-              : 'Please wait a minute before placing another order with this phone.'
-            : locale === 'ar'
-              ? 'تعذر إتمام الطلب. تحقق من السلة وحاول مرة أخرى.'
-              : 'Could not place the order. Check your cart and try again.';
-        setCheckoutErr(msg);
+      if (!payload || typeof payload !== 'object' || !('ok' in payload) || !payload.ok) {
+        const code = typeof (payload as { error?: string })?.error === 'string' ? (payload as { error: string }).error : '';
+        setCheckoutErr(checkoutApiErrorMessage(code, locale));
         return;
       }
 
@@ -139,21 +169,33 @@ export default function CartDrawer() {
 
       const message = buildCheckoutWhatsAppMessage({
         restaurantNameAr: settings.nameAr,
-        orderId: data.orderId,
+        orderId: payload.orderId,
         customerName,
         customerPhone,
         orderType,
         addressLine,
         deliveryNotes,
         paymentMethod,
-        display: data.display,
+        display: payload.display,
       });
       const encodedMessage = encodeURIComponent(message);
-      window.open(`https://wa.me/${safeNumber}?text=${encodedMessage}`, '_blank');
+      const waUrl = `https://wa.me/${safeNumber}?text=${encodedMessage}`;
+      const win = window.open(waUrl, '_blank', 'noopener,noreferrer');
+      if (!win) {
+        setCheckoutErr(
+          locale === 'ar'
+            ? 'المتصفح منع فتح واتساب. يمكنك فتح الرابط يدويًا أو نسخ الرسالة.\nYour browser blocked the popup. Open the link manually or copy the message.'
+            : 'Your browser blocked the popup. Open the link manually or copy the message.\nالمتصفح منع فتح واتساب. يمكنك فتح الرابط يدويًا أو نسخ الرسالة.'
+        );
+        setWaFallback({ url: waUrl, plainMessage: message });
+        return;
+      }
       clearCart();
     } catch {
       setCheckoutErr(
-        locale === 'ar' ? 'حدث خطأ في الشبكة. حاول مرة أخرى.' : 'Network error. Try again.'
+        locale === 'ar'
+          ? 'حدث خطأ في الشبكة. حاول مرة أخرى.\nNetwork error. Try again.'
+          : 'Network error. Try again.\nحدث خطأ في الشبكة. حاول مرة أخرى.'
       );
     } finally {
       setCheckoutBusy(false);
